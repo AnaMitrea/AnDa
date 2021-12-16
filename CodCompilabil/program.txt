@@ -1,0 +1,7 @@
+int #x;
+int #a;
+const int #b;
+start
+#x -> -505;
+#a -> 0;
+finish
