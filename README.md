@@ -5,3 +5,8 @@ Schema Proiect: https://docs.google.com/document/d/11IkXxfoeaDLs4QW58GmxWlX8tZNe
 
 Compilare proiect: 
 bash mk.sh proiect
+
+
+Resurse:
+
+1) https://docs.oracle.com/cd/E19504-01/802-5880/lex-6/index.html
