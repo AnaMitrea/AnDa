@@ -18,19 +18,13 @@ progr: declaratii bloc {printf("program corect sintactic\n");}
 declaratii :  declaratie ';'
 	   | declaratii declaratie ';'
 	   ;
-declaratie : TIP ID
-           | CONST TIP ID
-           | TIP ID '(' lista_param ')'
-           | CONST TIP ID '(' lista_param ')'
-           | TIP ID '(' ')'
-           | CONST TIP ID '(' ')'
+declaratie : TIP listaConst
+           | CONST TIP listaConst
            ;
-lista_param : param
-            | lista_param ','  param 
-            ;
-            
-param : TIP ID
-      ; 
+
+listaConst : ID
+           | listaConst ',' ID
+           ; 
       
 /* bloc */
 bloc : START list FINISH  

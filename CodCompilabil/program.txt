@@ -1,6 +1,6 @@
 int #x;
-int #a;
-const int #b;
+int #a, #y;
+const int #b, #c;
 start
 #x -> -505;
 #a -> 0;
