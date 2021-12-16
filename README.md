@@ -10,3 +10,4 @@ bash mk.sh proiect
 Resurse:
 
 1) https://docs.oracle.com/cd/E19504-01/802-5880/lex-6/index.html
+2) Numere pozitive si negative: https://www.geeksforgeeks.org/lex-program-identify-count-positive-negative-numbers/
