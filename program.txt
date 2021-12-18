@@ -1,6 +1,13 @@
-int #x;
 int #a;
+int #b;
+const int #c; 
 start
-#x -> 5;
-#a -> 13;
+
+#a -> 2;
+#b -> 3;
+#c -> #a + #b;
+
+print("value of #c is: ", #c);
+
+
 finish
