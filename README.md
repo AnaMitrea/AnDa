@@ -13,3 +13,11 @@ Resurse:
 2) The Fundamentals of lex Rules: https://docs.oracle.com/cd/E19504-01/802-5880/lex-6/index.html
 3) Numere pozitive si negative: https://www.geeksforgeeks.org/lex-program-identify-count-positive-negative-numbers/
 4) https://silcnitc.github.io/ywl.html
+
+Resurse video:
+1) Introducere 1 YACC https://www.youtube.com/watch?v=yTXCPGAD3SQ&ab_channel=WayneCochran
+2) Introducere 2 YACC https://www.youtube.com/watch?v=mGIme3D0NTA&ab_channel=WayneCochran
+3) Introducere 3 YACC https://www.youtube.com/watch?v=wEFvuOvllkM&ab_channel=WayneCochran
+
+4) Part 01: Tutorial on lex/yacc https://www.youtube.com/watch?v=54bo1qaHAfk&ab_channel=JonathanEngelsma
+5) Part 02: Tutorial on lex/yacc https://www.youtube.com/watch?v=__-wUHG2rfM&ab_channel=JonathanEngelsma
