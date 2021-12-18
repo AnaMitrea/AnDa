@@ -2,10 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
-extern FILE* yyin;
-extern char* yytext;
-extern int yylineno;
 %}
 %token
 
