@@ -13,6 +13,7 @@ Resurse:
 2) The Fundamentals of lex Rules: https://docs.oracle.com/cd/E19504-01/802-5880/lex-6/index.html
 3) Numere pozitive si negative: https://www.geeksforgeeks.org/lex-program-identify-count-positive-negative-numbers/
 4) https://silcnitc.github.io/ywl.html
+5) Symbol Table Implementation: http://publicvoidlife.com/2014/12/18/yacc-program-implement-symbol-table-compiler/
 
 Resurse video:
 1) Introducere 1 YACC https://www.youtube.com/watch?v=yTXCPGAD3SQ&ab_channel=WayneCochran
