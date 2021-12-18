@@ -1,0 +1,6 @@
+int #x;
+int #a;
+start
+#x -> 5;
+#a -> 13;
+finish
