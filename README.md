@@ -3,8 +3,14 @@ Enunt: https://docs.google.com/document/d/16kXgtGknKOjQpg1mojSh0s6H8XQmFQPM6Hf0_
 
 Schema Proiect: https://docs.google.com/document/d/11IkXxfoeaDLs4QW58GmxWlX8tZNe803iFBI8U9L4xHE/edit
 
-Compilare proiect: 
-bash mk.sh proiect
+Compilare proiect cu mk.sh: 
+- bash mk.sh proiect
+- ./proiect program.txt
+
+Compilare proiect cu makefile:
+- make all
+- ./proiect program.txt
+
 
 
 Resurse:
