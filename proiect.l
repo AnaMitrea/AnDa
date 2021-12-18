@@ -39,7 +39,7 @@
 "return"    {return RETURN;}
 
 #[_a-zA-Z][_a-zA-Z0-9]*     {return ID;}
-[0]|([-]?[1-9][0-9]*)       {yylval.num = atoi(yytext); return NUM;}
+[0]|[-]?[1-9][0-9]*       {yylval.num = atoi(yytext); return NUM;}
 [ \t]                       ;
 [\n]                        {yylineno++;}
 .                           {ECHO; yyerror("Unknown character"); printf("%s \n",yytext);}
