@@ -8,7 +8,7 @@ extern char* yytext;
 extern int yylineno;
 %}
 %token START FINISH
-%token ASSIGN TIP ID NR CONST
+%token ASSIGN TIP CONST NR IDvar IDclass
 
 
 %start progr
@@ -25,11 +25,12 @@ declaratie     : TIP lista ';'
                | CONST TIP lista ';'
                ;
 
-lista     : ID
-          | ID ASSIGN NR
-          | lista ',' ID
-          | lista ',' ID ASSIGN NR
-          | lista ',' ID ASSIGN ID
+lista     : IDvar
+          | IDvar ASSIGN NR
+          | IDvar ASSIGN IDvar
+          | lista ',' IDvar
+          | lista ',' IDvar ASSIGN NR
+          | lista ',' IDvar ASSIGN IDvar
           ;
 
 /* blocul de instructiuni */
@@ -37,19 +38,18 @@ bloc : START instructiuni FINISH
      ;
 
 /* instructiuni */
-instructiuni   : statement ';'
-               | instructiuni statement ';'
+instructiuni   : instructiuni declaratie
+               | declaratie
+               | instructiuni lista ';'
+               | lista ';'
                ;
-
-statement      : ID ASSIGN NR
-               | ID ASSIGN ID
-               ; 
-
 %%
-int yyerror(char * s){
+int yyerror(char * s)
+{
      printf("eroare: %s la linia:%d\n",s,yylineno);
 }
-int main(int argc, char** argv){
+int main(int argc, char** argv)
+{
      yyin=fopen(argv[1],"r");
      yyparse();
 } 
