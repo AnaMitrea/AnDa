@@ -24,5 +24,5 @@ Resurse video:
 
 4) Part 01: Tutorial on lex/yacc https://www.youtube.com/watch?v=54bo1qaHAfk&ab_channel=JonathanEngelsma
 5) Part 02: Tutorial on lex/yacc https://www.youtube.com/watch?v=__-wUHG2rfM&ab_channel=JonathanEngelsma
-            * de la min 19:30 reguli 
-            * Code Source: https://github.com/jengelsma/yacc-tutorial
+            5.1) de la min 19:30 reguli 
+            5.2) Code Source: https://github.com/jengelsma/yacc-tutorial
