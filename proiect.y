@@ -9,7 +9,7 @@ extern int yylineno;
 %}
 %token STARTD FINISHD
 %token STARTI FINISHI
-%token ASSIGN TIP CONST NR NR_decimal IDvar IDclass IDvar_class IDarr IDfun Function 
+%token ASSIGN TIP CONST NR NR_decimal IDvar IDclass IDvar_class IDarr IDfun Function Class
 %token FORstmt to_FOR with_FOR
 %token WHILEstmt IFstmt ELSIF ELS
 %token MINUS PLUS DIV PROD
@@ -22,23 +22,29 @@ extern int yylineno;
 %%
 progr: bloc_d bloc_i {printf("\nProgram corect sintactic!\n\n");}
      ;
-/* Blocul de declaratii */
-bloc_d : STARTD declaratie FINISHD
+/* Blocul de declarare */
+bloc_d : STARTD declarare FINISHD
        | STARTD FINISHD
        ;
 
 
-declaratie     : TIP lista_arr ';' 
+declarare      : TIP lista_arr ';' 
                | lista_arr ';'
                | TIP lista ';' 
                | CONST TIP lista ';'
                | functie 
-               | declaratie TIP lista ';'
-               | declaratie CONST TIP lista ';'
-               | declaratie TIP lista_arr ';'
-               | declaratie lista_arr ';'
-               | declaratie functie
+               | declarare_class
+               | declarare declarare_class
+               | declarare TIP lista ';'
+               | declarare CONST TIP lista ';'
+               | declarare TIP lista_arr ';'
+               | declarare lista_arr ';'
+               | declarare functie
                ;
+
+declarare_class     : Class IDclass '{' declarare '}' ';'
+                    | Class IDclass '{' declarare '}' IDvar_class ';'
+                    ;
 
 functie        : Function IDfun '(' ')' '{' instructiuni '}' 
                ;
@@ -48,8 +54,10 @@ apelFunctie    : IDfun '(' ')'
 
 lista     : IDvar
           | IDvar ASSIGN exp
+          | IDvar ASSIGN '(' conditie ')'
           | lista ',' IDvar
           | lista ',' IDvar ASSIGN termen
+          | lista ',' IDvar ASSIGN '(' conditie ')'
           ;
 
 lista_arr : IDarr
@@ -81,6 +89,8 @@ instructiuni   : instructiuni ';'
                | lista ';'
                | instructiuni lista_arr ';'
                | lista_arr ';'
+               | IDclass IDvar_class ';'
+               | instructiuni IDclass IDvar_class ';'
                | instructiuni apelFunctie ';'
                | apelFunctie ';'
                | instructiuni FORstatement 
