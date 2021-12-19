@@ -5,11 +5,10 @@ int #b -> 4.5;
 int #a -> -43, #g, #gf -> #b;
 const int #c -> -43, #g, #gf -> #b;
 int #c -> 2 + 3;
+int #c -> (2 == 3), #a -> (3 > 2);
 const int #c -> #a * 3 / 5;
 
 int %a[4];
-int a;
-int a[4];
 %a[0] -> 41.99;
 %a[1] -> 0; 
 %a[2] -> 10;
@@ -19,8 +18,7 @@ Class @myclass
     int #b;
     float #c;
     int %d[3];
-} ~a;
-
+} ~obj;
 
 Function $nume()
 {
@@ -45,6 +43,9 @@ start_i
 $nume();
 
 %a[1] -> 9;
+
+@myclass ~obj2;
+@myclass ~obj3;
 
 #c -> 2 + 3;
 #c -> 1 * 4;
