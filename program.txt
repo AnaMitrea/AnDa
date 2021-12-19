@@ -7,6 +7,20 @@ const int #c -> -43, #g, #gf -> #b;
 int #c -> 2 + 3;
 const int #c -> #a * 3 / 5;
 
+int %a[4];
+int a;
+int a[4];
+%a[0] -> 41.99;
+%a[1] -> 0; 
+%a[2] -> 10;
+
+Class @myclass
+{
+    int #b;
+    float #c;
+    int %d[3];
+} ~a;
+
 
 Function $nume()
 {
@@ -27,7 +41,10 @@ start_i
 #a -> 2.08;
 #b -> -3;
 #c -> #a;
+
 $nume();
+
+%a[1] -> 9;
 
 #c -> 2 + 3;
 #c -> 1 * 4;
@@ -35,5 +52,49 @@ $nume();
 #c -> 10 / 2;
 #c -> #a + 3 - 5;
 #c -> #a + #b;
+
+FOR(#b -> 0 to 7 with 1)::
+{
+    #c -> #c + 1;
+}
+
+WHILE(#b)::
+{
+    #b -> 99;
+}
+
+
+WHILE(#b >= 9)::
+{
+    #b -> 99;
+}
+
+IF(#b != #a)::
+{
+    #b -> 9;
+}
+ELSEIF(#b >= 9)::
+{
+    WHILE(#b >= 9)::
+    {
+        FOR(#b -> 0 to 7 with 1)::
+        {
+            #c -> #c + 1;
+        }
+    }
+}
+ELSE::
+{
+    #b -> 99;
+}
+
+IF(#b != #a)::
+{
+    #b -> 9;
+}
+ELSE::
+{
+    #b -> 99;
+}
 
 finish_i
