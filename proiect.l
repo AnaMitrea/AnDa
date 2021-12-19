@@ -6,8 +6,10 @@
 %option noyywrap
 %%
 
-"start"     {return START;}
-"finish"    {return FINISH;}
+"start_d"     {return STARTD;}
+"finish_d"    {return FINISHD;}
+"start_i"     {return STARTI;}
+"finish_i"    {return FINISHI;}
 "int"|"float"|"char"|"string"|"bool" {return TIP;}
 "Function"                           {return Function;}
 "const"                              {return CONST;}
