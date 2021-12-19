@@ -1,3 +1,4 @@
+start_d
 int #a;
 int #b -> 4;
 int #b -> 4.5;
@@ -7,26 +8,25 @@ int #c -> 2 + 3;
 const int #c -> #a * 3 / 5;
 
 
-Function $nume();
-
 Function $nume()
 {
-    int #nr1 -> 10.8;
+    #nr1 -> 10.8;
     #nr2 -> 238 * -77;
 }
+
 
 Function $Nume()
 {
     #a -> #b;
 }
 
-start
-int #b, #c -> 0;
-const int #a -> -66;
+finish_d
+start_i
+#b, #c -> 0;
+#a -> -66;
 #a -> 2.08;
 #b -> -3;
 #c -> #a;
-
 $nume();
 
 #c -> 2 + 3;
@@ -36,4 +36,4 @@ $nume();
 #c -> #a + 3 - 5;
 #c -> #a + #b;
 
-finish
+finish_i
