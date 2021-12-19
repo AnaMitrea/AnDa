@@ -7,7 +7,8 @@ extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
 %}
-%token START FINISH
+%token STARTD FINISHD
+%token STARTI FINISHI
 %token ASSIGN TIP CONST NR NR_decimal IDvar IDclass IDfun Function
 %token MINUS PLUS DIV PROD
 
@@ -16,21 +17,23 @@ extern int yylineno;
 
 %start progr
 %%
-progr: declaratii_globale bloc {printf("\nProgram corect sintactic!\n\n");}
+progr: bloc_d bloc_i {printf("\nProgram corect sintactic!\n\n");}
      ;
+/* Blocul de declaratii */
+bloc_d : STARTD declaratie FINISHD
+       | STARTD FINISHD
+       ;
 
-/* Declaratii globale inainte de blocul de instructiuni */
-declaratii_globale  :  declaratii_globale declaratie 
-                    |  declaratie 
-	               ;
 
-declaratie     : TIP lista ';'
+declaratie     : TIP lista ';' 
                | CONST TIP lista ';'
-               | functie
+               | functie 
+               | declaratie TIP lista ';'
+               | declaratie CONST TIP lista ';'
+               | declaratie functie
                ;
 
-functie        : Function IDfun '(' ')' ';'
-               | Function IDfun '(' ')' '{' instructiuni '}'
+functie        : Function IDfun '(' ')' '{' instructiuni '}' 
                ;
 
 apelFunctie    : IDfun '(' ')'
@@ -58,12 +61,11 @@ termen    : IDvar
           ;
 
 /* Blocul de instructiuni */
-bloc : START instructiuni FINISH
+bloc_i : STARTI instructiuni FINISHI
      ;
 
 /* instructiuni */
-instructiuni   : instructiuni declaratie
-               | declaratie
+instructiuni   : instructiuni ';'
                | instructiuni lista ';'
                | lista ';'
                | instructiuni apelFunctie ';'
