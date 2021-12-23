@@ -19,13 +19,15 @@ struct dataType {
         char * type;
         char * scope;
         int line_no;
-    } symbol_table[40];
+    } symbol_table[100];
     int q;
     char type[10];
     int count=0;
 %}
 
-%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE TRUE1 FALSE1 NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR ADD MULTIPLY DIVIDE SUBTRACT UNARY RETURN ASSIGN STRING FUNCTION DOUBLE 
+%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE TRUE1 FALSE1 NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE ADD MULTIPLY DIVIDE SUBTRACT
+%left ADD SUBTRACT
+%left MULTIPLY DIVIDE
 %start program
 %%
 
@@ -84,10 +86,10 @@ body:FOR { add('K','b'); } '(' statement ';' condition ';' statement ')' DOUBLE 
 | SCANFF '(' STR ',' '&' ID ')' ';' { add('K','b'); } 
 | body SCANFF '(' STR ',' '&' ID ')' ';' { add('K','b'); } 
 ;
-toprint: PRINT '(' INT ',' expression ')' 
-        | PRINT '(' CHAR ',' expression ')' 
-        | PRINT '(' FLOAT ',' expression ')' 
-        | PRINT '(' BOOL ',' expression ')' 
+toprint: PRINT '(' INT ',' expression ')' {printf("valoare e %d\n",$5); }
+        | PRINT '(' CHAR ',' expression ')' {printf("valoare e %d\n",$5); }
+        | PRINT '(' FLOAT ',' expression ')' {printf("valoare e %d\n",$5); }
+        | PRINT '(' BOOL ',' expression ')' {printf("valoare e %d\n",$5); }
         ;
 else: ELSE { add('K','b'); } '{' body '}'
 |
@@ -139,10 +141,10 @@ initf: '{' bodyf '}'
 ;
 
 
-expression: value ADD value //{$$=$1+$3; }
-| value SUBTRACT value //{$$=$1-$3; }
-| value MULTIPLY value //{$$=$1*$3; }
-| value DIVIDE value //{$$=$1/$3; }
+expression: expression ADD value {$$=$1+$3; }
+| expression SUBTRACT value {$$=$1-$3; }
+| expression MULTIPLY value {$$=$1*$3; }
+| expression DIVIDE value {$$=$1/$3; }
 | value 
 ;
 
@@ -157,10 +159,10 @@ relop: LT
 ;
 
 
-value: NUMBER { add('C','b');  }
-| FLOAT_NUM   { add('C','b'); }
-| CHARACTER  { add('C','b');  }
-| STRING { add('C','b');}
+value: NUMBER { add('C','b'); $$=atoi(yytext); }
+| FLOAT_NUM   { add('C','b'); $$=atof(yytext);}
+| CHARACTER  { add('C','b');  $$=yytext[1];}
+| STRING { add('C','b'); $$=strdup(yytext);}
 | ID 
 ;
 
