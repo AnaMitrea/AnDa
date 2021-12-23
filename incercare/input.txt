@@ -1,0 +1,43 @@
+int a;
+int x->1;
+function int da()::
+{
+int d->7;
+ if (x>5) :: {
+            print(int,2+3);
+        }
+};
+{
+    int a;
+    int x->1;
+    int y->2;
+    int z->3;
+    bool w->TRUE;
+    x->3;
+    y->10;
+    z->5;
+    if(x>5) :: {
+        for(int k->0; k<10; k++):: {
+            y -> x+3;
+            print(char,'a');
+        }
+    } else {
+        int idx -> 1;
+    }
+    for(int i->0; i<10; i++):: {
+        print(float,2.7+3.4);
+        scanf("%d", &x);
+        if (x>5):: {
+            print(int,9);
+        }
+        for(int j->0; j<z; j++):: {
+            a->1;
+        }
+    } 
+    function int nu(int hai,float ba)::
+    {
+    int e->12;
+   
+    };
+    return 1;
+}
