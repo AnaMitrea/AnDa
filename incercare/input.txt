@@ -4,7 +4,9 @@ function int da()::
 {
 int d->7;
  if (x>5) :: {
-            print(int,2+3);
+ int g;
+ g->9*17+3;
+            print(int,-2*4+3);
         }
 };
 {
