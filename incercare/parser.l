@@ -40,10 +40,10 @@ unary "++"|"--"
 "<"	                    { return LT; }
 "&&"	                    { return AND; }
 "||"	                    { return OR; }
-"+"                         { return ADD; }
-"-"                         { return SUBTRACT; }
-"/"                         { return DIVIDE; }
-"*"                         { return MULTIPLY; }
+"+"                         { return PLUS; }
+"-"                         { return MINUS; }
+"/"                         { return DIV; }
+"*"                         { return PROD; }
 "::"                        { return DOUBLE; }
 \/\/.*                      { ; }
 \/\*(.*\n)*.*\*\/           { ; } 
