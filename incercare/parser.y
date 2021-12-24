@@ -25,7 +25,7 @@ struct dataType {
     int count=0;
 %}
 
-%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE TRUE1 FALSE1 NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE ADD MULTIPLY DIVIDE SUBTRACT
+%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE TRUE1 FALSE1 NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE PLUS MINUS DIV PROD
 %left ADD SUBTRACT
 %left MULTIPLY DIVIDE
 %start program
@@ -95,13 +95,23 @@ else: ELSE { add('K','b'); } '{' body '}'
 |
 ;
 
-condition: value relop value 
+condition: value LT value
+| value GT value
+| value LE value
+| value GE value
+| value EQ value
+| value NE value
 | TRUE1 { add('V','b'); }
 | FALSE1 { add('V','b');  }
 |
 ;
 
-conditionf: valuef relop valuef 
+conditionf: valuef LT valuef
+| valuef GT valuef
+| valuef LE valuef
+| valuef GE valuef
+| valuef EQ valuef
+| valuef NE valuef  
 | TRUE1 { add('V','f'); }
 | FALSE1 { add('V','f');  }
 |
@@ -109,14 +119,24 @@ conditionf: valuef relop valuef
 
 statement: datatype ID { add('V','b'); } init 
 | ID ASSIGN expression 
-| ID relop expression 
+| ID LT expression
+| ID GT expression
+| ID LE expression
+| ID GE expression
+| ID EQ expression
+| ID NE expression 
 | ID UNARY 
 | UNARY ID 
 ;
 
 statementf: datatype ID { add('V','f'); } initfu 
-| ID ASSIGN expression 
-| ID relop expression 
+| ID ASSIGN expressionf 
+| ID LT expressionf
+| ID GT expressionf
+| ID LE expressionf
+| ID GE expressionf
+| ID EQ expressionf
+| ID NE expressionf
 | ID UNARY 
 | UNARY ID 
 ;
@@ -141,23 +161,23 @@ initf: '{' bodyf '}'
 ;
 
 
-expression: expression ADD value {$$=$1+$3; }
-| expression SUBTRACT value {$$=$1-$3; }
-| expression MULTIPLY value {$$=$1*$3; }
-| expression DIVIDE value {$$=$1/$3; }
-| value 
+expression: expression PLUS termen {$$=$1+$3; }
+| expression MINUS termen {$$=$1-$3; }
+| termen {$$=$1;}
+;
+termen: termen PROD value {$$=$1*$3; }
+| termen DIV value {$$=$1/$3; }
+| value {$$=$1; }
 ;
 
-
-
-relop: LT
-| GT
-| LE
-| GE
-| EQ
-| NE
+expressionf: expressionf PLUS termenf {$$=$1+$3; }
+| expressionf MINUS termenf {$$=$1-$3; }
+| termenf {$$=$1;}
 ;
-
+termenf: termenf PROD valuef {$$=$1*$3; }
+| termenf DIV valuef {$$=$1/$3; }
+| valuef {$$=$1; }
+;
 
 value: NUMBER { add('C','b'); $$=atoi(yytext); }
 | FLOAT_NUM   { add('C','b'); $$=atof(yytext);}
