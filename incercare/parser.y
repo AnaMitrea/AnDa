@@ -25,7 +25,7 @@ struct dataType {
     int count=0;
 %}
 
-%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE TRUE1 FALSE1 NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE PLUS MINUS DIV PROD
+%token  VOID CHARACTER PRINT SCANFF INT FLOAT CHAR BOOL FOR IF WHILE ELSE NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
 %left ADD SUBTRACT
 %left MULTIPLY DIVIDE
 %start program
@@ -101,8 +101,7 @@ condition: value LT value
 | value GE value
 | value EQ value
 | value NE value
-| TRUE1 { add('V','b'); }
-| FALSE1 { add('V','b');  }
+| BOOL_VALUE { add('V','b'); }
 |
 ;
 
@@ -112,8 +111,7 @@ conditionf: valuef LT valuef
 | valuef GE valuef
 | valuef EQ valuef
 | valuef NE valuef  
-| TRUE1 { add('V','f'); }
-| FALSE1 { add('V','f');  }
+| BOOL_VALUE { add('V','f'); }
 |
 ;
 
@@ -154,6 +152,8 @@ function: datatype ID { add('F','b'); } '(' declarp ')' DOUBLE initf
 
 declarp: datatype ID { add('P','f'); }
 | declarp ',' datatype ID { add('P','f'); }
+| FUNCTION datatype ID { add('P','f'); }
+| declarp ',' FUNCTION datatype ID { add('P','f'); }
 |
 ;
 initf: '{' bodyf '}' 
@@ -183,6 +183,7 @@ value: NUMBER { add('C','b'); $$=atoi(yytext); }
 | FLOAT_NUM   { add('C','b'); $$=atof(yytext);}
 | CHARACTER  { add('C','b');  $$=yytext[1];}
 | STRING { add('C','b'); $$=strdup(yytext);}
+| BOOL_VALUE { add('C','b'); $$=strdup(yytext);}
 | ID 
 ;
 
@@ -190,6 +191,7 @@ valuef: NUMBER { add('C','f');  }
 | FLOAT_NUM   { add('C','f'); }
 | CHARACTER  { add('C','f');  }
 | STRING { add('C','f');}
+| BOOL_VALUE { add('C','f'); $$=strdup(yytext);}
 | ID 
 ;
 
@@ -360,6 +362,8 @@ void add(char c1,char c2) {
 		}
 	}
 }
+
+
 
 void insert_type() {
 	strcpy(type, yytext);
