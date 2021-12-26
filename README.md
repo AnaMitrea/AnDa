@@ -34,3 +34,4 @@ Resurse video:
 5.1) de la min 19:30 reguli 
 5.2) Code Source: https://github.com/jengelsma/yacc-tutorial
 6) Parse Tree: http://web.eecs.utk.edu/~bvanderz/cs461/notes/parse_tree/ & https://silcnitc.github.io/ywl.html
+7) https://medium.com/codex/building-a-c-compiler-using-lex-and-yacc-446262056aaa
