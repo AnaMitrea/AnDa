@@ -25,10 +25,9 @@ unary "++"|"--"
 "if"	                    { return IF; }
 "while"                     { return WHILE; }
 "else"	                    { return ELSE; }
-"true"                      { return TRUE1; }
-"false"                     { return FALSE1; }
 "->"                         { return ASSIGN; }
 [-]?{digit}+                 { return NUMBER; }
+"TRUE"|"FALSE"              { return BOOL_VALUE; }
 [-]?{digit}+\.{digit}{1,6}  { return FLOAT_NUM; }
 {alpha}({alpha}|{digit})*   { return ID; }
 {unary}                     { return UNARY; }
@@ -52,6 +51,5 @@ unary "++"|"--"
 .                           {return yytext[0];}
 ["].*["]                    { return STR; }
 ['].[']                     { return CHARACTER; }
-
 %%
 
