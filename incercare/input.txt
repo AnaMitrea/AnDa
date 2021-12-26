@@ -9,6 +9,10 @@ int d->7;
             print(int,-2*4+3);
         }
 };
+
+function int f()
+{ };
+
 {
     int a;
     int x->1;
