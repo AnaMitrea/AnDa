@@ -65,6 +65,8 @@ bodyf:FOR { add('K','f'); } '(' statement ';' condition ';' statement ')' DOUBLE
 | bodyf toprint { add('K','f');} ';'
 | SCANFF '(' STR ',' '&' ID ')' ';' { add('K','f'); } 
 | bodyf SCANFF '(' STR ',' '&' ID ')' ';' { add('K','f'); } 
+| RETURN { add('F','s'); } valuef ';'
+| bodyf RETURN { add('F','s'); } valuef ';'
 ;
 
 elsef: ELSE { add('K','f'); } '{' body '}'
