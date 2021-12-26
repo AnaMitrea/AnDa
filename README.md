@@ -33,3 +33,4 @@ Resurse video:
 5) Part 02: Tutorial on lex/yacc https://www.youtube.com/watch?v=__-wUHG2rfM&ab_channel=JonathanEngelsma
 5.1) de la min 19:30 reguli 
 5.2) Code Source: https://github.com/jengelsma/yacc-tutorial
+6) Parse Tree: http://web.eecs.utk.edu/~bvanderz/cs461/notes/parse_tree/ & https://silcnitc.github.io/ywl.html
