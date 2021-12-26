@@ -179,7 +179,8 @@ termenf: termenf PROD valuef {$$=$1*$3; }
 | valuef {$$=$1; }
 ;
 
-value: NUMBER { add('C','b'); $$=atoi(yytext); }
+value: '(' expression ')' {$$=$2;}
+| NUMBER { add('C','b'); $$=atoi(yytext); }
 | FLOAT_NUM   { add('C','b'); $$=atof(yytext);}
 | CHARACTER  { add('C','b');  $$=yytext[1];}
 | STRING { add('C','b'); $$=strdup(yytext);}
@@ -187,7 +188,8 @@ value: NUMBER { add('C','b'); $$=atoi(yytext); }
 | ID 
 ;
 
-valuef: NUMBER { add('C','f');  }
+valuef: '(' expressionf ')' {$$=$2;}
+| NUMBER { add('C','f');  }
 | FLOAT_NUM   { add('C','f'); }
 | CHARACTER  { add('C','f');  }
 | STRING { add('C','f');}
