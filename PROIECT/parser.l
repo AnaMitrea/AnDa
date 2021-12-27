@@ -20,10 +20,7 @@ unary "++"|"--"
 "print"                     { return PRINT; }
 "function"                  { return FUNCTION; }
 "const"                     { return CONST; }
-"int"                       { return INT; }
-"float"                     { return FLOAT; }
-"char"                      { return CHAR; }
-"bool"                      { return BOOL; }
+"int"|"float"|"char"|"bool" { yylval.str = strdup(yytext); return DATATYPE; }
 "void"                      { return VOID; }
 "string"                    { return STRING; }
 "return"                    { return RETURN; }
@@ -49,12 +46,12 @@ unary "++"|"--"
 "*"                         { return PROD; }
 "::"                        { return DOUBLE; }
 
-[-]?{digit}+                                { return NUMBER; }
-[-]?{digit}+\.{digit}{1,6}                  { return FLOAT_NUM; }
-["].*["]                                    { return STR; }
+[-]?{digit}+                                { yylval.intnum = atoi(yytext); return NUMBER; }
+[-]?{digit}+\.{digit}{1,6}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
+["].*["]                                    { yylval.str = strdup(yytext); return STR; }
 ['].[']                                     { return CHARACTER; }
-{alpha}({alpha}|{digit})*                   { return ID; }
-{unary}                                     { return UNARY; }
+{alpha}({alpha}|{digit})*                   { yylval.str = strdup(yytext); return ID; }
+{unary}                                     { yylval.str = strdup(yytext); return UNARY; }
 
 \/\/.*                      { ; }
 \/\*(.*\n)*.*\*\/           { ; } 
