@@ -90,20 +90,23 @@ bodymain
 
 body_main
     : declarare
-    | IF '(' conditie ')' DOUBLE '{' statement  '}'
-    | IF '(' conditie ')' DOUBLE '{' statement  '}' ELSE DOUBLE '{' statement  '}'
+    | IF '(' conditie ')' DOUBLE '{' statement '}' els
+    ;
+
+els
+    : ELSE DOUBLE '{' statement '}'
+    | 
     ;
 
 conditie
-    : value LT value
-    | value GT value
-    | value LE value
-    | value GE value
-    | value EQ value
-    | value NE value
-    | conditie AND conditie
-    | conditie OR conditie
-    | '(' conditie ')'
+    : expresie LT expresie
+    | expresie GT expresie
+    | expresie LE expresie
+    | expresie GE expresie
+    | expresie EQ expresie
+    | expresie NE expresie
+    | '(' conditie AND conditie ')'
+    | '(' conditie OR conditie ')'
     ;
 
 statement
@@ -118,11 +121,6 @@ statements
     | ID ASSIGN '(' expresie ')' ';'
     | ID ASSIGN conditie ';'
     | ID ASSIGN '(' conditie ')' ';'
-    ;
-
-value
-    : expresie
-    | '(' expresie ')'
     ;
 
 expresie
@@ -147,5 +145,4 @@ int main(int argc, char** argv)
 {
      yyin=fopen(argv[1],"r");
      yyparse();
-} 
-
+}
