@@ -47,7 +47,7 @@ unary "++"|"--"
 "::"                        { return DOUBLE; }
 
 [-]?{digit}+                                { yylval.intnum = atoi(yytext); return NUMBER; }
-[-]?{digit}+\.{digit}{1,6}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
+[-]?{digit}+\.{digit}{1,2}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
 ["].*["]                                    { yylval.str = strdup(yytext); return STR; }
 ['].[']                                     { return CHARACTER; }
 {alpha}({alpha}|{digit})*                   { yylval.str = strdup(yytext); return ID; }
@@ -58,5 +58,4 @@ unary "++"|"--"
 [ \t]                        ;
 \n                          {yylineno++;}
 .                           {return yytext[0];}
-
 %%
