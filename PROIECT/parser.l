@@ -6,7 +6,8 @@
 
 alpha [a-zA-Z]
 digit [0-9]
-unary "++"|"--"
+incr "++"
+decr "--"
 
 %%
 
@@ -51,7 +52,7 @@ unary "++"|"--"
 ["].*["]                                    { yylval.str = strdup(yytext); return STR; }
 ['].[']                                     { return CHARACTER; }
 {alpha}({alpha}|{digit})*                   { yylval.str = strdup(yytext); return ID; }
-{unary}                                     { yylval.str = strdup(yytext); return UNARY; }
+"++"|"--"                                   { yylval.str = strdup(yytext); return UNARY; }
 
 \/\/.*                      { ; }
 \/\*(.*\n)*.*\*\/           { ; } 
