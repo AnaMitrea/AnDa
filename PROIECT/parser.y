@@ -13,7 +13,10 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
 void incrementare_decrementare(char* nume, char* op);
+int return_cu_variabila(char* nume);
+void asignare(char* nume, int valoare);
 int is_declared(char* nume);
+void eroareFLOAT();
 
 struct variables 
 {
@@ -114,8 +117,8 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
     symbol_table[count].hasValue = 1;
-    symbol_table[count].ivalue = valoare;
-    symbol_table[count].flvalue = 999999;
+    symbol_table[count].ivalue = 999999;
+    symbol_table[count].flvalue = valoare;
     symbol_table[count].line_no = yylineno;
 
     count++;
@@ -208,6 +211,64 @@ void incrementare_decrementare(char* nume, char* op)
         symbol_table[decl].ivalue = symbol_table[decl].ivalue - 1;
 }
 
+int return_cu_variabila(char* nume)
+{
+    int decl = is_declared(nume);
+
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].hasValue == 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu are valoare.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+    if(strcmp(symbol_table[decl].data_type,"int") == 0)
+        return symbol_table[decl].ivalue;
+    else
+    {
+        return -999999;
+    }
+}
+
+void eroareFLOAT()
+{
+    char errmsg[300];
+    sprintf(errmsg, "Expresia este float.");
+    yyerror(errmsg);
+    exit(0);
+}
+
+void asignare(char* nume, int valoare)
+{
+    int decl = is_declared(nume);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este declarata",nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].isConst == 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Nu se poate asigna o valoare variabilei de tip const \"%s\" ",nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[decl].hasValue = 1;
+    symbol_table[decl].ivalue = valoare;
+}
+
 %}
 
 %union
@@ -221,6 +282,7 @@ void incrementare_decrementare(char* nume, char* op)
 %token <str> ID DATATYPE UNARY
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
+%type <intnum> expresie
 
 %left PLUS MINUS
 %left PROD DIV
@@ -306,20 +368,20 @@ statement
 statements
     : ID UNARY                      { incrementare_decrementare($1,$2); }                
     | UNARY ID                      { incrementare_decrementare($2,$1); }  
-    | ID ASSIGN expresie
-    | ID ASSIGN '(' expresie ')'
+    | ID ASSIGN expresie            { asignare($1,$3); }
+    | ID ASSIGN '(' expresie ')'    { asignare($1,$4); }
     | ID ASSIGN conditie
     | ID ASSIGN '(' conditie ')'
     ;
 
 expresie
-    : expresie PLUS expresie
-    | expresie MINUS expresie
-    | expresie PROD expresie
-    | expresie DIV expresie
-    | NUMBER
-    | FLOAT_NUM
-    | ID
+    : expresie PLUS expresie        { $$ = $1 + $3; }
+    | expresie MINUS expresie       { $$ = $1 - $3; }
+    | expresie PROD expresie        { $$ = $1 * $3; }
+    | expresie DIV expresie         { $$ = $1 / $3; }
+    | NUMBER                        { $$ = $1; }
+    | FLOAT_NUM                     { eroareFLOAT(); }
+    | ID                            { if(return_cu_variabila($1) == -999999) {eroareFLOAT();} else { $$ = return_cu_variabila($1);} }
     ;
 
 
