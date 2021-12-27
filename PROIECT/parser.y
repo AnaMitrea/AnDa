@@ -11,6 +11,7 @@ extern int yylineno;
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
+void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
 int is_declared(char* tip, char* nume);
 
 struct variables 
