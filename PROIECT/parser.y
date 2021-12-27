@@ -12,6 +12,7 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
+void incrementare_decrementare(char* tip, char* nume, char* op);
 int is_declared(char* tip, char* nume);
 
 struct variables 
@@ -157,6 +158,46 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
     count++;
 }
 
+void incrementare_decrementare(char* tip, char* nume, char* op)
+{
+    int decl = is_declared(tip,nume);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(tip,"int") != 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este de tip int si nu se poate incrementa/decrementa.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].isConst == 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este de tip const si nu se poate incrementa/decrementa.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].hasValue == 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu are valoare si nu se poate incrementa/decrementa.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(op, "++") == 0)
+        symbol_table[decl].value++;
+    if(strcmp(op, "--") == 0)
+        symbol_table[decl].value--;
+}
 
 %}
 
@@ -167,13 +208,14 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST UNARY STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
-%token <str> ID DATATYPE
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
+%token <str> ID DATATYPE UNARY
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 
 %left PLUS MINUS
 %left PROD DIV
+%left UNARY
 
 %start prog
 
@@ -225,6 +267,7 @@ bodymain
 
 body_main
     : declarare
+    | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
@@ -247,17 +290,17 @@ conditie
     ;
 
 statement
-    : statement statements
-    | statements
+    : statement statements ';'
+    | statements ';'
     ;
 
 statements
-    : ID UNARY ';'
-    | UNARY ID ';'
-    | ID ASSIGN expresie ';'
-    | ID ASSIGN '(' expresie ')' ';'
-    | ID ASSIGN conditie ';'
-    | ID ASSIGN '(' conditie ')' ';'
+    : ID UNARY                  
+    | UNARY ID
+    | ID ASSIGN expresie
+    | ID ASSIGN '(' expresie ')'
+    | ID ASSIGN conditie
+    | ID ASSIGN '(' conditie ')'
     ;
 
 expresie
@@ -310,4 +353,4 @@ int main(int argc, char** argv)
     }
 
     fclose(f1);
-}
+} 
