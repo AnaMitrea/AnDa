@@ -8,32 +8,92 @@ extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
 
+void declarare_fara_initializare(char* tip, char* nume, int constanta);
+int is_declared(char* tip, char* nume);
+
 struct variables 
 {
     char* data_type;
     int isConst;
-    char* id_name;
+    char* name;
     char* scope;
 	int value;
     int hasValue;
     int line_no;
-} symbol_table[100];
+};
+struct variables symbol_table[100];
 
 struct function
 {
     char* type;
     char* func_name;
     char* args;
-} symbol_table_functions[100];
+};
+struct function symbol_table_functions[100];
 
 int count = 0;
+
+int is_declared(char* tip, char* nume)
+{
+    for(int i = 0; i < count; i++)
+    {
+        if(strcmp(symbol_table[i].name,nume) == 0)
+        {
+            if(strcmp(symbol_table[i].data_type,tip) == 0)
+            {
+                return i;
+            }
+        }
+    }
+    return -1;
+}
+
+void declarare_fara_initializare(char* tip, char* nume, int constanta)
+{
+    if(is_declared(tip,nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(constanta == 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila constanta \"%s\" trebuie initializata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = 0;
+    symbol_table[count].hasValue = 0;
+    symbol_table[count].line_no = yylineno;
+
+    count++;
+}
+
 %}
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT INT FLOAT CHAR CONST BOOL FOR IF WHILE ELSE NUMBER FLOAT_NUM ID LE GE EQ NE GT LT AND OR STR UNARY RETURN ASSIGN STRING FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
+%union
+{
+    char* str;
+    int intnum;
+    float flnum;
+}
+
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST UNARY STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
+%token <str> ID DATATYPE
+%token <intnum> NUMBER
+%token <flnum> FLOAT_NUM
+
 %left PLUS MINUS
 %left PROD DIV
 
 %start prog
+
 %%
 
 
@@ -65,22 +125,14 @@ declarari
     ;
 
 declarare
-    : datatype ID ';'
-    | CONST datatype ID ';'
-    | datatype ID ASSIGN NUMBER ';'
-    | CONST datatype ID ASSIGN NUMBER ';'
-    | datatype ID ASSIGN FLOAT_NUM ';'
-    | CONST datatype ID ASSIGN FLOAT_NUM ';'
-    | datatype ID ASSIGN ID ';'
-    | CONST datatype ID ASSIGN ID ';'
-    ;
-
-datatype 
-    : INT
-    | FLOAT
-    | CHAR
-    | BOOL
-    | STRING
+    : DATATYPE ID ';'                               { declarare_fara_initializare($1,$2,0); }
+    | CONST DATATYPE ID ';'                         { declarare_fara_initializare($2,$3,1); }
+    | DATATYPE ID ASSIGN NUMBER ';'
+    | CONST DATATYPE ID ASSIGN NUMBER ';'
+    | DATATYPE ID ASSIGN FLOAT_NUM ';'
+    | CONST DATATYPE ID ASSIGN FLOAT_NUM ';'
+    | DATATYPE ID ASSIGN ID ';'
+    | CONST DATATYPE ID ASSIGN ID ';'
     ;
 
 bodymain
@@ -140,11 +192,19 @@ expresie
 
 int yyerror(char * s)
 {
-     printf("eroare: %s la linia:%d\n",s,yylineno);
+     printf("Eroare: %s Linia:%d\n",s,yylineno);
 }
+
+
 
 int main(int argc, char** argv)
 {
-     yyin=fopen(argv[1],"r");
-     yyparse();
+    yyin=fopen(argv[1],"r");
+    yyparse();
+
+    for(int i=0;i<count;i++) 
+    {
+		free(symbol_table[i].name);
+		free(symbol_table[i].data_type);
+    }
 }
