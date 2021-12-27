@@ -192,19 +192,39 @@ expresie
 
 int yyerror(char * s)
 {
-     printf("Eroare: %s Linia:%d\n",s,yylineno);
+    printf("Eroare: %s Linia:%d\n",s,yylineno);
 }
-
 
 
 int main(int argc, char** argv)
 {
     yyin=fopen(argv[1],"r");
+
+    FILE *f1;
+    f1 = fopen("symbol_table.txt", "w");
+
+    if (f1 == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
     yyparse();
+
+    fprintf(f1,"\nSYMBOL   DATATYPE   LINENUMBER \n");
+	fprintf(f1,"_______________________________________\n\n");
+
+    for(int i = 0; i < count; i++)
+    {
+        fprintf(f1,"%s\t%s\t%d\t\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].line_no);
+    }
+    
 
     for(int i=0;i<count;i++) 
     {
 		free(symbol_table[i].name);
 		free(symbol_table[i].data_type);
     }
+
+    fclose(f1);
 }
