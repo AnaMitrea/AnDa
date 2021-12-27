@@ -91,6 +91,8 @@ bodymain
 body_main
     : declarare
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
+    | WHILE '(' conditie ')' DOUBLE '{' statement '}'
+    | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
     ;
 
 els
