@@ -9,6 +9,8 @@ extern char* yytext;
 extern int yylineno;
 
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
+void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
+void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 int is_declared(char* tip, char* nume);
 
 struct variables 
@@ -17,7 +19,7 @@ struct variables
     int isConst;
     char* name;
     char* scope;
-	int value;
+	float value;
     int hasValue;
     int line_no;
 };
@@ -70,10 +72,90 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = 0;
     symbol_table[count].hasValue = 0;
+    symbol_table[count].value = 999999;
     symbol_table[count].line_no = yylineno;
 
     count++;
 }
+
+void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta)
+{
+    if(is_declared(tip,nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = constanta;
+    symbol_table[count].hasValue = 1;
+    symbol_table[count].value = valoare;
+    symbol_table[count].line_no = yylineno;
+
+    count++;
+}
+
+void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta)
+{
+    if(is_declared(tip,nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = constanta;
+    symbol_table[count].hasValue = 1;
+    symbol_table[count].value = valoare;
+    symbol_table[count].line_no = yylineno;
+
+    count++;
+}
+
+
+void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta)
+{
+    if(is_declared(tip,nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    int decl = is_declared(tip,var);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este declarata si nu se poate asigna la \"%s\" sau nu corespunde tipul de date.", var, nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].hasValue == 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu are asignata nicio valoare.", var);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = constanta;
+    symbol_table[count].hasValue = 1;
+    symbol_table[count].value = symbol_table[decl].value;
+    symbol_table[count].line_no = yylineno;
+
+    count++;
+}
+
 
 %}
 
@@ -127,12 +209,12 @@ declarari
 declarare
     : DATATYPE ID ';'                               { declarare_fara_initializare($1,$2,0); }
     | CONST DATATYPE ID ';'                         { declarare_fara_initializare($2,$3,1); }
-    | DATATYPE ID ASSIGN NUMBER ';'
-    | CONST DATATYPE ID ASSIGN NUMBER ';'
-    | DATATYPE ID ASSIGN FLOAT_NUM ';'
-    | CONST DATATYPE ID ASSIGN FLOAT_NUM ';'
-    | DATATYPE ID ASSIGN ID ';'
-    | CONST DATATYPE ID ASSIGN ID ';'
+    | DATATYPE ID ASSIGN NUMBER ';'                 { declarare_cu_init_intnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN NUMBER ';'           { declarare_cu_init_intnumar($2,$3,$5,1); }
+    | DATATYPE ID ASSIGN FLOAT_NUM ';'              { declarare_cu_init_floatnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN FLOAT_NUM ';'        { declarare_cu_init_floatnumar($2,$3,$5,1); }
+    | DATATYPE ID ASSIGN ID ';'                     { declarare_cu_init_variabila($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN ID ';'               { declarare_cu_init_variabila($2,$3,$5,1); }
     ;
 
 bodymain
@@ -211,12 +293,12 @@ int main(int argc, char** argv)
 
     yyparse();
 
-    fprintf(f1,"\nSYMBOL   DATATYPE   LINENUMBER \n");
+    fprintf(f1,"\nSYMBOL   DATATYPE   VALUE   LINENUMBER \n");
 	fprintf(f1,"_______________________________________\n\n");
 
     for(int i = 0; i < count; i++)
     {
-        fprintf(f1,"%s\t%s\t%d\t\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].line_no);
+        fprintf(f1,"%s\t\t%s\t\t%f\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].value, symbol_table[i].line_no);
     }
     
 
