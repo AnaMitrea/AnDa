@@ -12,8 +12,8 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
-void incrementare_decrementare(char* tip, char* nume, char* op);
-int is_declared(char* tip, char* nume);
+void incrementare_decrementare(char* nume, char* op);
+int is_declared(char* nume);
 
 struct variables 
 {
@@ -21,7 +21,8 @@ struct variables
     int isConst;
     char* name;
     char* scope;
-	float value;
+    int ivalue;
+	float flvalue;
     int hasValue;
     int line_no;
 };
@@ -37,16 +38,13 @@ struct function symbol_table_functions[100];
 
 int count = 0;
 
-int is_declared(char* tip, char* nume)
+int is_declared(char* nume)
 {
     for(int i = 0; i < count; i++)
     {
         if(strcmp(symbol_table[i].name,nume) == 0)
         {
-            if(strcmp(symbol_table[i].data_type,tip) == 0)
-            {
-                return i;
-            }
+            return i;
         }
     }
     return -1;
@@ -54,7 +52,7 @@ int is_declared(char* tip, char* nume)
 
 void declarare_fara_initializare(char* tip, char* nume, int constanta)
 {
-    if(is_declared(tip,nume) != -1)
+    if(is_declared(nume) != -1)
     {
         char errmsg[300];
         sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
@@ -74,7 +72,8 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = 0;
     symbol_table[count].hasValue = 0;
-    symbol_table[count].value = 999999;
+    symbol_table[count].ivalue = 999999;
+    symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
 
     count++;
@@ -82,7 +81,7 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
 
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta)
 {
-    if(is_declared(tip,nume) != -1)
+    if(is_declared(nume) != -1)
     {
         char errmsg[300];
         sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
@@ -94,7 +93,8 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
     symbol_table[count].hasValue = 1;
-    symbol_table[count].value = valoare;
+    symbol_table[count].ivalue = valoare;
+    symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
 
     count++;
@@ -102,7 +102,7 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
 
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta)
 {
-    if(is_declared(tip,nume) != -1)
+    if(is_declared(nume) != -1)
     {
         char errmsg[300];
         sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
@@ -114,7 +114,8 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
     symbol_table[count].hasValue = 1;
-    symbol_table[count].value = valoare;
+    symbol_table[count].ivalue = valoare;
+    symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
 
     count++;
@@ -123,7 +124,7 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
 
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta)
 {
-    if(is_declared(tip,nume) != -1)
+    if(is_declared(nume) != -1)
     {
         char errmsg[300];
         sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
@@ -131,7 +132,7 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
         exit(0);
     }
 
-    int decl = is_declared(tip,var);
+    int decl = is_declared(var);
     if(decl == -1)
     {
         char errmsg[300];
@@ -152,15 +153,23 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
     symbol_table[count].hasValue = 1;
-    symbol_table[count].value = symbol_table[decl].value;
+    if(strcmp(symbol_table[decl].data_type,"float") == 0)
+    {
+        symbol_table[count].flvalue = symbol_table[decl].flvalue;
+    }
+    else 
+    if(strcmp(symbol_table[decl].data_type,"int") == 0 || strcmp(symbol_table[decl].data_type,"bool") == 0 )
+    {
+        symbol_table[count].ivalue = symbol_table[decl].ivalue;
+    }
     symbol_table[count].line_no = yylineno;
 
     count++;
 }
 
-void incrementare_decrementare(char* tip, char* nume, char* op)
+void incrementare_decrementare(char* nume, char* op)
 {
-    int decl = is_declared(tip,nume);
+    int decl = is_declared(nume);
     if(decl == -1)
     {
         char errmsg[300];
@@ -169,7 +178,7 @@ void incrementare_decrementare(char* tip, char* nume, char* op)
         exit(0);
     }
 
-    if(strcmp(tip,"int") != 0)
+    if(strcmp(symbol_table[decl].data_type,"int") != 0)
     {
         char errmsg[300];
         sprintf(errmsg, "Variabila \"%s\" nu este de tip int si nu se poate incrementa/decrementa.", nume);
@@ -194,9 +203,9 @@ void incrementare_decrementare(char* tip, char* nume, char* op)
     }
 
     if(strcmp(op, "++") == 0)
-        symbol_table[decl].value++;
+        symbol_table[decl].ivalue = symbol_table[decl].ivalue + 1;
     if(strcmp(op, "--") == 0)
-        symbol_table[decl].value--;
+        symbol_table[decl].ivalue = symbol_table[decl].ivalue - 1;
 }
 
 %}
@@ -295,8 +304,8 @@ statement
     ;
 
 statements
-    : ID UNARY                  
-    | UNARY ID
+    : ID UNARY                      { incrementare_decrementare($1,$2); }                
+    | UNARY ID                      { incrementare_decrementare($2,$1); }  
     | ID ASSIGN expresie
     | ID ASSIGN '(' expresie ')'
     | ID ASSIGN conditie
@@ -342,7 +351,15 @@ int main(int argc, char** argv)
 
     for(int i = 0; i < count; i++)
     {
-        fprintf(f1,"%s\t\t%s\t\t%f\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].value, symbol_table[i].line_no);
+        if(strcmp(symbol_table[i].data_type,"float") == 0)
+        {
+            fprintf(f1,"%s\t\t%s\t\t%f\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].flvalue, symbol_table[i].line_no);
+        }
+        else 
+        if(strcmp(symbol_table[i].data_type,"int") == 0)
+        {
+            fprintf(f1,"%s\t\t%s\t\t%d\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
+        }
     }
     
 
@@ -353,4 +370,4 @@ int main(int argc, char** argv)
     }
 
     fclose(f1);
-} 
+}
