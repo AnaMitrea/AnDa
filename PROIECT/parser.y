@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <stdbool.h>
 
 extern FILE* yyin;
 extern char* yytext;
@@ -11,6 +12,7 @@ extern int yylineno;
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
+void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
 void incrementare_decrementare(char* nume, char* op);
 int return_cu_variabila(char* nume);
@@ -92,6 +94,17 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
         exit(0);
     }
 
+    if(strcmp(tip,"bool") == 0)
+    {
+        if(valoare != 0 && valoare != 1)
+        {
+            char errmsg[300];
+            sprintf(errmsg, "Variabila \"%s\" este de tip bool si nu poate fi initializata cu alte valori in afara de 1 sau 0 (TRUE sau FALSE).", nume);
+            yyerror(errmsg);
+            exit(0);
+        }
+    }
+
     symbol_table[count].name = strdup(nume);
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
@@ -123,7 +136,6 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
 
     count++;
 }
-
 
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta)
 {
@@ -165,6 +177,35 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
     {
         symbol_table[count].ivalue = symbol_table[decl].ivalue;
     }
+    symbol_table[count].line_no = yylineno;
+
+    count++;
+}
+
+void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta)
+{
+    if(is_declared(nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" este deja declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(valoare != 0 && valoare != 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu are o valoare specifica de tipul bool.", nume);
+        yyerror(errmsg);
+        exit(0);
+    } 
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = constanta;
+    symbol_table[count].hasValue = 1;
+    symbol_table[count].ivalue = valoare;
+    symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
 
     count++;
@@ -265,6 +306,17 @@ void asignare(char* nume, int valoare)
         exit(0);
     }
 
+    if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
+    {
+        if(valoare != 1 && valoare != 0)
+        {
+            char errmsg[300];
+            sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 variabilei de tip bool \"%s\" ",nume);
+            yyerror(errmsg);
+            exit(0);
+        }
+    }
+
     symbol_table[decl].hasValue = 1;
     symbol_table[decl].ivalue = valoare;
 }
@@ -275,14 +327,16 @@ void asignare(char* nume, int valoare)
 {
     char* str;
     int intnum;
+    _Bool boolnum;
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD BOOL_VALUE
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
 %token <str> ID DATATYPE UNARY
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
-%type <intnum> expresie
+%token <boolnum> BOOL_VALUE
+%type <intnum> expresie conditie
 
 %left PLUS MINUS
 %left PROD DIV
@@ -327,6 +381,8 @@ declarare
     | CONST DATATYPE ID ASSIGN NUMBER ';'           { declarare_cu_init_intnumar($2,$3,$5,1); }
     | DATATYPE ID ASSIGN FLOAT_NUM ';'              { declarare_cu_init_floatnumar($1,$2,$4,0); }
     | CONST DATATYPE ID ASSIGN FLOAT_NUM ';'        { declarare_cu_init_floatnumar($2,$3,$5,1); }
+    | DATATYPE ID ASSIGN BOOL_VALUE ';'             { declarare_cu_init_boolnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN BOOL_VALUE ';'       { declarare_cu_init_boolnumar($2,$3,$5,1); } 
     | DATATYPE ID ASSIGN ID ';'                     { declarare_cu_init_variabila($1,$2,$4,0); }
     | CONST DATATYPE ID ASSIGN ID ';'               { declarare_cu_init_variabila($2,$3,$5,1); }
     ;
@@ -350,14 +406,14 @@ els
     ;
 
 conditie
-    : expresie LT expresie
-    | expresie GT expresie
-    | expresie LE expresie
-    | expresie GE expresie
-    | expresie EQ expresie
-    | expresie NE expresie
-    | '(' conditie AND conditie ')'
-    | '(' conditie OR conditie ')'
+    : expresie LT expresie          { $$ = ($1 < $3); }
+    | expresie GT expresie          { $$ = ($1 > $3); }
+    | expresie LE expresie          { $$ = ($1 <= $3); }
+    | expresie GE expresie          { $$ = ($1 >= $3); }
+    | expresie EQ expresie          { $$ = ($1 == $3); }
+    | expresie NE expresie          { $$ = ($1 != $3); }
+    | '(' conditie AND conditie ')' { $$ = ($2 && $4); }
+    | '(' conditie OR conditie ')'  { $$ = ($2 || $4); }
     ;
 
 statement
@@ -370,8 +426,8 @@ statements
     | UNARY ID                      { incrementare_decrementare($2,$1); }  
     | ID ASSIGN expresie            { asignare($1,$3); }
     | ID ASSIGN '(' expresie ')'    { asignare($1,$4); }
-    | ID ASSIGN conditie
-    | ID ASSIGN '(' conditie ')'
+    | ID ASSIGN conditie            { asignare($1,$3); }
+    | ID ASSIGN '(' conditie ')'    { asignare($1,$4); }
     ;
 
 expresie
@@ -381,6 +437,7 @@ expresie
     | expresie DIV expresie         { $$ = $1 / $3; }
     | NUMBER                        { $$ = $1; }
     | FLOAT_NUM                     { eroareFLOAT(); }
+    | BOOL_VALUE                    { $$ = $1; }
     | ID                            { if(return_cu_variabila($1) == -999999) {eroareFLOAT();} else { $$ = return_cu_variabila($1);} }
     ;
 
@@ -418,7 +475,7 @@ int main(int argc, char** argv)
             fprintf(f1,"%s\t\t%s\t\t%f\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].flvalue, symbol_table[i].line_no);
         }
         else 
-        if(strcmp(symbol_table[i].data_type,"int") == 0)
+        if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0)
         {
             fprintf(f1,"%s\t\t%s\t\t%d\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
         }
