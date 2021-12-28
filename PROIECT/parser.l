@@ -22,7 +22,6 @@ decr "--"
 "function"                  { return FUNCTION; }
 "const"                     { return CONST; }
 "int"|"float"|"char"|"bool" { yylval.str = strdup(yytext); return DATATYPE; }
-"void"                      { return VOID; }
 "string"                    { return STRING; }
 "return"                    { return RETURN; }
 "for"	                    { return FOR; }
