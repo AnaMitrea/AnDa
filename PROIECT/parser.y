@@ -14,6 +14,8 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
+void declarare_functie(char* tip, char* nume, char* argum);
+int verificare_functie(char* nume, char* argum);
 void incrementare_decrementare(char* nume, char* op);
 int return_cu_variabila(char* nume);
 void asignare(char* nume, int valoare);
@@ -35,13 +37,14 @@ struct variables symbol_table[100];
 
 struct function
 {
-    char* type;
-    char* func_name;
+    char* data_type;
+    char* name;
     char* args;
 };
 struct function symbol_table_functions[100];
 
 int count = 0;
+int count_f = 0;
 
 int is_declared(char* nume)
 {
@@ -164,6 +167,14 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
         exit(0);
     }
 
+    if(strcmp(symbol_table[decl].data_type,tip) != 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabilele \"%s\" si \"%s\" nu sunt de acelasi tip de date.", var, nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
     symbol_table[count].name = strdup(nume);
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
@@ -271,6 +282,7 @@ int return_cu_variabila(char* nume)
         yyerror(errmsg);
         exit(0);
     }
+    
     if(strcmp(symbol_table[decl].data_type,"int") == 0)
         return symbol_table[decl].ivalue;
     else
@@ -282,7 +294,7 @@ int return_cu_variabila(char* nume)
 void eroareFLOAT()
 {
     char errmsg[300];
-    sprintf(errmsg, "Expresia este float.");
+    sprintf(errmsg, "Expresia este de tip float.");
     yyerror(errmsg);
     exit(0);
 }
@@ -321,6 +333,36 @@ void asignare(char* nume, int valoare)
     symbol_table[decl].ivalue = valoare;
 }
 
+int verificare_functie(char* nume, char* argum)
+{
+    for(int i = 0; i < count_f; i++)
+    {
+        if(strcmp(symbol_table_functions[i].name,nume) == 0 && strcmp(symbol_table_functions[i].args,argum) == 0)
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void declarare_functie(char* tip, char* nume, char* argum)
+{
+    if(verificare_functie(nume,argum) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" are aceeasi signatura.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table_functions[count_f].name = nume;
+    symbol_table_functions[count_f].data_type = tip;
+    symbol_table_functions[count_f].args = argum;
+    count_f++;
+}
+
+
+
 %}
 
 %union
@@ -331,7 +373,7 @@ void asignare(char* nume, int valoare)
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM VOID CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
 %token <str> ID DATATYPE UNARY
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
@@ -362,8 +404,38 @@ global
     ;
 
 functii
-    : STARTFUNCTIONS DOUBLE declarari ENDFUNCTIONS
+    : STARTFUNCTIONS DOUBLE declfunctii ENDFUNCTIONS
     ;
+
+declfunctii
+    : decl_functii
+    | declfunctii decl_functii
+    ;
+
+decl_functii
+    : FUNCTION DATATYPE ID '(' parametri ')' ';'
+    | FUNCTION DATATYPE ID '(' parametri ')' DOUBLE '{' bodyfunction '}'
+    ;
+
+parametri
+    : DATATYPE ID
+    | parametri ',' DATATYPE ID
+    | 
+    ;
+
+bodyfunction
+    : body_function
+    | bodyfunction body_function
+    ;
+
+body_function
+    : declarare
+    | statements ';'
+    | IF '(' conditie ')' DOUBLE '{' statement '}' els
+    | WHILE '(' conditie ')' DOUBLE '{' statement '}'
+    | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
+    ;
+
 
 main
     : STARTPROGRAM DOUBLE bodymain ENDPROGRAM
