@@ -436,7 +436,6 @@ body_function
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
     ;
 
-
 main
     : STARTPROGRAM DOUBLE bodymain ENDPROGRAM
     ;
@@ -466,6 +465,7 @@ bodymain
 
 body_main
     : declarare
+    | apelarefunctie ';'
     | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
@@ -474,6 +474,21 @@ body_main
 
 els
     : ELSE DOUBLE '{' statement '}'
+    | 
+    ;
+
+apelarefunctie
+    : ID '(' listaparametri ')'
+    ;
+
+listaparametri
+    : lista_parametri
+    | listaparametri ',' lista_parametri
+    ;
+
+lista_parametri
+    : expresie
+    | apelarefunctie
     | 
     ;
 
