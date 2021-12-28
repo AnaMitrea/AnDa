@@ -31,7 +31,8 @@ decr "--"
 "else"	                    { return ELSE; }
 "->"                        { return ASSIGN; }
 
-"TRUE"|"FALSE"              { return BOOL_VALUE; }
+"TRUE"                      { yylval.boolnum = 1; return BOOL_VALUE; }             
+"FALSE"                     { yylval.boolnum = 0; return BOOL_VALUE; }
 
 "<="                        { return LE; }
 ">="                        { return GE; }
@@ -48,7 +49,7 @@ decr "--"
 "::"                        { return DOUBLE; }
 
 [-]?{digit}+                                { yylval.intnum = atoi(yytext); return NUMBER; }
-[-]?{digit}+\.{digit}{1,2}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
+[-]?{digit}+\.{digit}{1,6}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
 ["].*["]                                    { yylval.str = strdup(yytext); return STR; }
 ['].[']                                     { return CHARACTER; }
 {alpha}({alpha}|{digit})*                   { yylval.str = strdup(yytext); return ID; }
