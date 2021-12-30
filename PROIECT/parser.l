@@ -19,8 +19,8 @@ decr "--"
 "end_program"               { return ENDPROGRAM; }
 
 "print"                     { return PRINT; }
-"function"                  { return FUNCTION; }
-"const"                     { return CONST; }
+"function"                  { yylval.str = strdup(yytext); return FUNCTION; }
+"const"                     { yylval.str = strdup(yytext); return CONST; }
 "int"|"float"|"char"|"bool" { yylval.str = strdup(yytext); return DATATYPE; }
 "string"                    { return STRING; }
 "return"                    { return RETURN; }
