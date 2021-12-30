@@ -23,7 +23,7 @@ decr "--"
 "const"                     { yylval.str = strdup(yytext); return CONST; }
 "int"|"float"|"char"|"bool" { yylval.str = strdup(yytext); return DATATYPE; }
 "string"                    { return STRING; }
-"return"                    { return RETURN; }
+"return"                    { yylval.str = strdup(yytext); return RETURN; }
 "for"	                    { return FOR; }
 "if"	                    { return IF; }
 "while"                     { return WHILE; }
