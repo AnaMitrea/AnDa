@@ -37,9 +37,10 @@ struct variables symbol_table[100];
 
 struct function
 {
-    char* data_type;
+    char* return_type;
     char* name;
     char* args;
+    int line_no;
 };
 struct function symbol_table_functions[100];
 
@@ -356,8 +357,9 @@ void declarare_functie(char* tip, char* nume, char* argum)
     }
 
     symbol_table_functions[count_f].name = nume;
-    symbol_table_functions[count_f].data_type = tip;
+    symbol_table_functions[count_f].return_type = tip;
     symbol_table_functions[count_f].args = argum;
+    symbol_table_functions[count_f].line_no = yylineno;
     count_f++;
 }
 
@@ -373,12 +375,13 @@ void declarare_functie(char* tip, char* nume, char* argum)
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT CONST STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
-%token <str> ID DATATYPE UNARY
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
+%token <str> ID DATATYPE UNARY CONST
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
 %type <intnum> expresie conditie
+%type <str> decl_functii argumente parametri
 
 %left PLUS MINUS
 %left PROD DIV
@@ -413,14 +416,19 @@ declfunctii
     ;
 
 decl_functii
-    : FUNCTION DATATYPE ID '(' parametri ')' ';'
-    | FUNCTION DATATYPE ID '(' parametri ')' DOUBLE '{' bodyfunction '}'
+    : FUNCTION DATATYPE ID argumente ';'                                { declarare_functie($2,$3,$4); }
+    | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction '}'        { declarare_functie($2,$3,$4); }
+    | ID argumente DOUBLE '{' bodyfunction '}'                          
+    ;
+
+argumente
+    : '(' parametri ')'     { $$ = $2; }
+    | '(' ')'               { $$ = malloc(50); $$[0] = 0; }
     ;
 
 parametri
-    : DATATYPE ID
-    | parametri ',' DATATYPE ID
-    | 
+    : DATATYPE ID                   { $$ = $1; strcat($$, ", "); }
+    | parametri ',' DATATYPE ID     { $$ = $1; strcat($$, $3); }
     ;
 
 bodyfunction
@@ -542,9 +550,17 @@ int main(int argc, char** argv)
     yyin=fopen(argv[1],"r");
 
     FILE *f1;
+    FILE *f2;
     f1 = fopen("symbol_table.txt", "w");
+    f2 = fopen("symbol_table_functions.txt", "w");
 
     if (f1 == NULL)
+    {
+        printf("Error opening file!\n");
+        exit(1);
+    }
+
+    if (f2 == NULL)
     {
         printf("Error opening file!\n");
         exit(1);
@@ -567,6 +583,14 @@ int main(int argc, char** argv)
             fprintf(f1,"%s\t\t%s\t\t%d\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
         }
     }
+
+    fprintf(f2,"\nSYMBOL   RETURNTYPE   PARAMETERS   LINENUMBER \n");
+	fprintf(f2,"_____________________________________________________\n\n");
+
+    for(int j = 0; j < count_f; j++)
+    {
+        fprintf(f2,"%s\t\t%s\t\t%s\t\t\t%d\n", symbol_table_functions[j].name, symbol_table_functions[j].return_type, symbol_table_functions[j].args, symbol_table_functions[j].line_no);
+    }
     
 
     for(int i=0;i<count;i++) 
@@ -575,5 +599,12 @@ int main(int argc, char** argv)
 		free(symbol_table[i].data_type);
     }
 
+    for(int i=0; i < count_f; i++)
+    {
+        free(symbol_table_functions[i].name);
+		free(symbol_table_functions[i].return_type);
+    }
+
     fclose(f1);
+    fclose(f2);
 }
