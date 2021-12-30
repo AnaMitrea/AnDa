@@ -375,8 +375,8 @@ void declarare_functie(char* tip, char* nume, char* argum)
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR RETURN ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
-%token <str> ID DATATYPE UNARY CONST
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
+%token <str> ID DATATYPE UNARY CONST RETURN
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
@@ -427,8 +427,8 @@ argumente
     ;
 
 parametri
-    : DATATYPE ID                   { $$ = $1; strcat($$, ", "); }
-    | parametri ',' DATATYPE ID     { $$ = $1; strcat($$, $3); }
+    : DATATYPE ID                   { $$ = $1; }
+    | parametri ',' DATATYPE ID     { $$ = $1; strcat($$, ", "); strcat($$, $3); }
     ;
 
 bodyfunction
@@ -442,6 +442,7 @@ body_function
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
+    | RETURN expresie ';'
     ;
 
 main
@@ -568,28 +569,28 @@ int main(int argc, char** argv)
 
     yyparse();
 
-    fprintf(f1,"\nSYMBOL   DATATYPE   VALUE   LINENUMBER \n");
-	fprintf(f1,"_______________________________________\n\n");
+    fprintf(f1,"\nSYMBOL       DATATYPE        VALUE        LINENUMBER \n");
+	fprintf(f1,"____________________________________________________________\n\n");
 
     for(int i = 0; i < count; i++)
     {
         if(strcmp(symbol_table[i].data_type,"float") == 0)
         {
-            fprintf(f1,"%s\t\t%s\t\t%f\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].flvalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t\t|\t%s\t\t\t|\t%f\t\t\t|\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].flvalue, symbol_table[i].line_no);
         }
         else 
         if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0)
         {
-            fprintf(f1,"%s\t\t%s\t\t%d\t\t\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t\t|\t%s\t\t\t|\t%d\t\t\t|\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
         }
     }
 
-    fprintf(f2,"\nSYMBOL   RETURNTYPE   PARAMETERS   LINENUMBER \n");
-	fprintf(f2,"_____________________________________________________\n\n");
+    fprintf(f2,"\nSYMBOL   RETURNTYPE           PARAMETERS                      LINENUMBER \n");
+	fprintf(f2,"_______________________________________________________________________\n\n");
 
     for(int j = 0; j < count_f; j++)
     {
-        fprintf(f2,"%s\t\t%s\t\t%s\t\t\t%d\n", symbol_table_functions[j].name, symbol_table_functions[j].return_type, symbol_table_functions[j].args, symbol_table_functions[j].line_no);
+        fprintf(f2,"%s\t\t|\t%s\t\t|\t%s\t\t\t|\t%d\n", symbol_table_functions[j].name, symbol_table_functions[j].return_type, symbol_table_functions[j].args, symbol_table_functions[j].line_no);
     }
     
 
