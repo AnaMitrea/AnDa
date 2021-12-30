@@ -14,13 +14,19 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
 void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
+
 void declarare_functie(char* tip, char* nume, char* argum);
+void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresie);
+void definire_functie_cu_return(char* nume, char* argum, int expresie);
 int verificare_functie(char* nume, char* argum);
+int verif_argumente_tip_int(char* argum);
+void verificare_apel_functie(char* nume, char* listaparametri);
+
 void incrementare_decrementare(char* nume, char* op);
 int return_cu_variabila(char* nume);
 void asignare(char* nume, int valoare);
 int is_declared(char* nume);
-void eroareFLOAT();
+void eroareExpresie();
 
 struct variables 
 {
@@ -40,6 +46,7 @@ struct function
     char* return_type;
     char* name;
     char* args;
+    int valoareReturn;
     int line_no;
 };
 struct function symbol_table_functions[100];
@@ -284,7 +291,7 @@ int return_cu_variabila(char* nume)
         exit(0);
     }
     
-    if(strcmp(symbol_table[decl].data_type,"int") == 0)
+    if(strcmp(symbol_table[decl].data_type,"int") == 0 || strcmp(symbol_table[decl].data_type,"bool") == 0)
         return symbol_table[decl].ivalue;
     else
     {
@@ -292,10 +299,10 @@ int return_cu_variabila(char* nume)
     }
 }
 
-void eroareFLOAT()
+void eroareExpresie()
 {
     char errmsg[300];
-    sprintf(errmsg, "Expresia este de tip float.");
+    sprintf(errmsg, "Expresia nu este de tip int.");
     yyerror(errmsg);
     exit(0);
 }
@@ -346,6 +353,38 @@ int verificare_functie(char* nume, char* argum)
     return -1;
 }
 
+int verif_argumente_tip_int(char* argum)
+{
+    char* ptr = strstr(argum, "bool");
+    if(ptr != NULL)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia are argumente de tip bool.");
+        yyerror(errmsg);
+        return -1;
+    }
+
+    ptr = strstr(argum, "char");
+    if(ptr != NULL)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia are argumente de tip char.");
+        yyerror(errmsg);
+        return -1;
+    }
+
+    ptr = strstr(argum, "float");
+    if(ptr != NULL)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia are argumente de tip float.");
+        yyerror(errmsg);
+        return -1;
+    }
+
+    return 1;
+}
+
 void declarare_functie(char* tip, char* nume, char* argum)
 {
     if(verificare_functie(nume,argum) != -1)
@@ -356,13 +395,115 @@ void declarare_functie(char* tip, char* nume, char* argum)
         exit(0);
     }
 
+    int verif = verif_argumente_tip_int(argum);
+    if(verif == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" nu are toate argumentele de tip int.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
     symbol_table_functions[count_f].name = nume;
     symbol_table_functions[count_f].return_type = tip;
     symbol_table_functions[count_f].args = argum;
+    symbol_table_functions[count_f].valoareReturn = 999999;
     symbol_table_functions[count_f].line_no = yylineno;
     count_f++;
 }
 
+void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresie)
+{
+    if(verificare_functie(nume,argum) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" are aceeasi signatura.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    int verif = verif_argumente_tip_int(argum);
+    if(verif == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" nu are toate argumentele de tip int.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table_functions[count_f].name = nume;
+    symbol_table_functions[count_f].return_type = tip;
+    symbol_table_functions[count_f].args = argum;
+    symbol_table_functions[count_f].valoareReturn = expresie;
+    symbol_table_functions[count_f].line_no = yylineno;
+    count_f++;
+}
+
+void definire_functie_cu_return(char* nume, char* argum, int expresie)
+{
+    int poz = verificare_functie(nume,argum);
+    if(poz == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" definita nu este declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table_functions[poz].valoareReturn = expresie;
+}
+
+
+void verificare_apel_functie(char* nume, char* listaparametri)
+{
+    int ok = -1;
+
+    for(int i = 0; i < count_f; i++)
+    {
+        if(strcmp(symbol_table_functions[i].name,nume) == 0)
+        {
+            ok = i;
+        }
+    }
+
+    if(ok == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" apelata nu este declarata.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table_functions[ok].valoareReturn == 999999)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" apelata nu returneaza nicio valoare.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    int countVirgule1 = 0;
+    for(int i = 0; i < strlen(symbol_table_functions[ok].args); i++)
+    {
+        if(symbol_table_functions[ok].args[i] == ',')
+            countVirgule1++;
+    }
+    
+    int countVirgule2 = 0;
+    for(int i = 0; i < strlen(listaparametri); i++)
+    {
+        if(listaparametri[i] == ',')
+            countVirgule2++;
+    }
+
+    if(countVirgule1 != countVirgule2)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Functia \"%s\" apelata nu are acelasi numar de parametri.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+}
 
 
 %}
@@ -381,8 +522,7 @@ void declarare_functie(char* tip, char* nume, char* argum)
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
 %type <intnum> expresie conditie
-%type <str> decl_functii argumente parametri
-
+%type <str> decl_functii argumente parametri apelarefunctie listaparametri lista_parametri
 %left PLUS MINUS
 %left PROD DIV
 %left UNARY
@@ -416,9 +556,9 @@ declfunctii
     ;
 
 decl_functii
-    : FUNCTION DATATYPE ID argumente ';'                                { declarare_functie($2,$3,$4); }
-    | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction '}'        { declarare_functie($2,$3,$4); }
-    | ID argumente DOUBLE '{' bodyfunction '}'                          
+    : FUNCTION DATATYPE ID argumente ';'                                                    { declarare_functie($2,$3,$4); }
+    | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'        { declarare_functie_cu_return($2,$3,$4,$9); }
+    | ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'                          { definire_functie_cu_return($1,$2,$7); }
     ;
 
 argumente
@@ -427,8 +567,8 @@ argumente
     ;
 
 parametri
-    : DATATYPE ID                   { $$ = $1; }
-    | parametri ',' DATATYPE ID     { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    : DATATYPE                   { $$ = $1; }
+    | parametri ',' DATATYPE     { $$ = $1; strcat($$, ", "); strcat($$, $3); }
     ;
 
 bodyfunction
@@ -442,7 +582,20 @@ body_function
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
-    | RETURN expresie ';'
+    ;
+
+apelarefunctie
+    : ID '(' listaparametri ')'             { verificare_apel_functie($1,$3); }          
+    ;
+
+listaparametri
+    : lista_parametri                       { $$ = $1; }   
+    | listaparametri ',' lista_parametri    { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    ;
+
+lista_parametri
+    : expresie          { $$ = malloc(100); strcpy($$,"int");}
+    | apelarefunctie    { $$ = $1; strcat($$,", ");}
     ;
 
 main
@@ -474,7 +627,7 @@ bodymain
 
 body_main
     : declarare
-    | apelarefunctie ';'
+    | apelarefunctie ';'                                                            
     | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
@@ -483,21 +636,6 @@ body_main
 
 els
     : ELSE DOUBLE '{' statement '}'
-    | 
-    ;
-
-apelarefunctie
-    : ID '(' listaparametri ')'
-    ;
-
-listaparametri
-    : lista_parametri
-    | listaparametri ',' lista_parametri
-    ;
-
-lista_parametri
-    : expresie
-    | apelarefunctie
     | 
     ;
 
@@ -532,9 +670,9 @@ expresie
     | expresie PROD expresie        { $$ = $1 * $3; }
     | expresie DIV expresie         { $$ = $1 / $3; }
     | NUMBER                        { $$ = $1; }
-    | FLOAT_NUM                     { eroareFLOAT(); }
+    | FLOAT_NUM                     { eroareExpresie(); }
     | BOOL_VALUE                    { $$ = $1; }
-    | ID                            { if(return_cu_variabila($1) == -999999) {eroareFLOAT();} else { $$ = return_cu_variabila($1);} }
+    | ID                            { if(return_cu_variabila($1) == -999999) {eroareExpresie();} else { $$ = return_cu_variabila($1);} }
     ;
 
 
@@ -585,12 +723,12 @@ int main(int argc, char** argv)
         }
     }
 
-    fprintf(f2,"\nSYMBOL   RETURNTYPE           PARAMETERS                      LINENUMBER \n");
-	fprintf(f2,"_______________________________________________________________________\n\n");
+    fprintf(f2,"\nSYMBOL   RETURN_TYPE           PARAMETERS                      VAL_RETURN       LINENUMBER \n");
+	fprintf(f2,"______________________________________________________________________________________________________\n\n");
 
     for(int j = 0; j < count_f; j++)
     {
-        fprintf(f2,"%s\t\t|\t%s\t\t|\t%s\t\t\t|\t%d\n", symbol_table_functions[j].name, symbol_table_functions[j].return_type, symbol_table_functions[j].args, symbol_table_functions[j].line_no);
+        fprintf(f2,"%s\t\t|\t%s\t\t|\t%s\t\t\t|\t%d\t\t\t|\t%d\n", symbol_table_functions[j].name, symbol_table_functions[j].return_type, symbol_table_functions[j].args, symbol_table_functions[j].valoareReturn, symbol_table_functions[j].line_no);
     }
     
 
