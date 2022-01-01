@@ -10,6 +10,7 @@ extern char* yytext;
 extern int yylineno;
 int cod=0;
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
+void declarare_vector(char* tip, char* nume, int dimens,int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
 void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
@@ -27,6 +28,7 @@ int verificare_datatype(char* nume);
 void incrementare_decrementare(char* nume, char* op);
 int return_cu_variabila(char* nume);
 void asignare(char* nume, int valoare);
+void asignareVector(char* nume, int dimens, int valoare);
 int is_declared(char* nume);
 void eroareExpresie();
 
@@ -39,6 +41,11 @@ struct variables
     int ivalue;
     float flvalue;
     int hasValue;
+
+    int dimensiuneMax;
+    int* vector;
+    int* hasVectorValue;
+
     int line_no;
 };
 struct variables symbol_table[100];
@@ -103,6 +110,49 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
     case 4:symbol_table[count].scope="defined inside the body";     
            break;
     }
+    count++;
+}
+
+void declarare_vector(char* tip, char* nume, int dimens, int constanta)
+{
+    if(is_declared(nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s[%d]\" este deja declarat.", nume, dimens);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(constanta == 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s\" nu poate fi de tip const.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[count].name = strdup(nume);
+    symbol_table[count].data_type = strdup(tip);
+    symbol_table[count].isConst = 0;
+    symbol_table[count].hasValue = 0;
+    symbol_table[count].ivalue = 999999;
+    symbol_table[count].flvalue = 999999;
+    symbol_table[count].dimensiuneMax = dimens;
+    symbol_table[count].vector = (int*)malloc(dimens * sizeof(int));
+    symbol_table[count].hasVectorValue = (int*)malloc(dimens * sizeof(int));
+    symbol_table[count].line_no = yylineno;
+
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
+
     count++;
 }
 
@@ -388,6 +438,85 @@ void asignare(char* nume, int valoare)
     symbol_table[decl].ivalue = valoare;
 }
 
+void asignareVector(char* nume, int dimens, int valoare)
+{
+    int decl = is_declared(nume);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s\" nu este declarat",nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
+    {
+        if(valoare != 1 && valoare != 0)
+        {
+            char errmsg[300];
+            sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 vectorului de tip bool \"%s\" ",nume);
+            yyerror(errmsg);
+            exit(0);
+        }
+    }
+
+    if(dimens >= symbol_table[decl].dimensiuneMax)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Dimensiunea maxima a vectorului \"%s[%d]\" a fost depasita.",nume, symbol_table[decl].dimensiuneMax);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(dimens < 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Dimensiunea vectorului \"%s[%d]\" nu poate fi negativa.",nume, symbol_table[decl].dimensiuneMax);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    symbol_table[decl].vector[dimens] = valoare;
+    symbol_table[decl].hasVectorValue[dimens] = 1;
+}
+
+int return_Valoare_Vector(char* nume, int dimens)
+{
+    int decl = is_declared(nume);
+
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s\" nu este declarat.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(dimens >= symbol_table[decl].dimensiuneMax)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Dimensiunea maxima a vectorului \"%s[%d]\" a fost depasita.",nume, symbol_table[decl].dimensiuneMax);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].hasVectorValue[dimens] == 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s[%d]\" nu are valoare.", nume, dimens);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(symbol_table[decl].data_type,"int") == 0 || strcmp(symbol_table[decl].data_type,"bool") == 0)
+        return symbol_table[decl].vector[dimens];
+    else
+    {
+        return -999999;
+    }
+
+}
+
 int verificare_functie(char* nume, char* argum)
 {
     for(int i = 0; i < count_f; i++)
@@ -500,7 +629,6 @@ void definire_functie_cu_return(char* nume, char* argum, int expresie)
     symbol_table_functions[poz].valoareReturn = expresie;
 }
 
-
 void verificare_apel_functie(char* nume, char* listaparametri)
 {
     int ok = -1;
@@ -597,7 +725,7 @@ int verificare_datatype(char* nume)
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
-%type <intnum> expresie conditie
+%type <intnum> expresie conditie dimensiuni
 %type <str> decl_functii argumente parametri apelarefunctie listaparametri lista_parametri
 %left PLUS MINUS
 %left PROD DIV
@@ -619,7 +747,7 @@ program
     ;
 
 global
-    :{cod=1;} STARTGLOBAL DOUBLE declarari ENDGLOBAL 
+    : {cod=1;} STARTGLOBAL DOUBLE declarari ENDGLOBAL 
     ;
 
 functii
@@ -635,7 +763,7 @@ decl_functii
     : FUNCTION DATATYPE ID argumente ';'   { declarare_functie($2,$3,$4); }
     | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'        { declarare_functie_cu_return($2,$3,$4,$9); }
     | ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'                          { definire_functie_cu_return($1,$2,$7); }
-    | {cod=3;}TYPE DOUBLE '{' elemente '}' ID ';'  {declarare_new_datatype($7); }
+    | {cod=3;} TYPE DOUBLE '{' elemente '}' ID ';'  {declarare_new_datatype($7); }
     ; 
 
 elemente : elemente element
@@ -648,7 +776,7 @@ element : declarare
 
 argumente
     : '(' parametri ')'     { $$ = $2; }
-    | '(' ')'               { $$ = malloc(50); $$[0] = 0; }
+    | '(' ')'               { $$ = malloc(100); $$[0] = 0; }
     ;
 
 parametri
@@ -662,7 +790,7 @@ bodyfunction
     ;
 
 body_function
-    : {cod=2;}declarare
+    : {cod=2;} declarare
     | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
@@ -684,7 +812,7 @@ lista_parametri
     ;
 
 main
-    : {cod=4;}STARTPROGRAM DOUBLE bodymain ENDPROGRAM 
+    : {cod=4;} STARTPROGRAM DOUBLE bodymain ENDPROGRAM 
     ;
 
 declarari
@@ -703,6 +831,12 @@ declarare
     | CONST DATATYPE ID ASSIGN BOOL_VALUE ';'       { declarare_cu_init_boolnumar($2,$3,$5,1); } 
     | DATATYPE ID ASSIGN ID ';'                     { declarare_cu_init_variabila($1,$2,$4,0); }
     | CONST DATATYPE ID ASSIGN ID ';'               { declarare_cu_init_variabila($2,$3,$5,1); }
+    | DATATYPE ID dimensiuni ';'                    { declarare_vector($1,$2,$3,0); }
+    | CONST DATATYPE ID dimensiuni ';'              { declarare_vector($2,$3,$4,1); }  
+    ;
+
+dimensiuni
+    : '[' NUMBER ']'        { $$ = $2; }
     ;
 
 bodymain
@@ -741,24 +875,25 @@ statement
     ;
 
 statements
-    : ID UNARY                      { incrementare_decrementare($1,$2); }                
-    | UNARY ID                      { incrementare_decrementare($2,$1); }  
-    | ID ASSIGN expresie            { asignare($1,$3); }
-    | ID ASSIGN '(' expresie ')'    { asignare($1,$4); }
-    | ID ASSIGN conditie            { asignare($1,$3); }
-    | ID ASSIGN '(' conditie ')'    { asignare($1,$4); }
+    : ID UNARY                          { incrementare_decrementare($1,$2); }                
+    | UNARY ID                          { incrementare_decrementare($2,$1); }  
+    | ID ASSIGN expresie                { asignare($1,$3); }
+    | ID ASSIGN '(' expresie ')'        { asignare($1,$4); }
+    | ID ASSIGN conditie                { asignare($1,$3); }
+    | ID ASSIGN '(' conditie ')'        { asignare($1,$4); }
+    | ID dimensiuni ASSIGN expresie     { asignareVector($1,$2,$4); }
     ;
 
 expresie
     : expresie PLUS expresie        { $$ = $1 + $3; }
     | expresie MINUS expresie       { $$ = $1 - $3; }
     | expresie PROD expresie        { $$ = $1 * $3; }
-    | expresie DIV expresie         { $$ = $1 / $3; }
+    | expresie DIV expresie         { if($3 == 0) {yyerror("Impartire la zero!");}  $$ = $1 / $3; }
     | NUMBER                        { $$ = $1; }
     | FLOAT_NUM                     { eroareExpresie(); }
     | BOOL_VALUE                    { $$ = $1; }
-    | ID                            { if(return_cu_variabila($1) == -999999) 
-                                    {eroareExpresie();} else { $$ = return_cu_variabila($1);} }
+    | ID                            { if(return_cu_variabila($1) == -999999) {eroareExpresie();} else {$$ = return_cu_variabila($1);} }
+    | ID dimensiuni                 { if(return_Valoare_Vector($1,$2) == -999999) { eroareExpresie(); } else {$$ = return_Valoare_Vector($1,$2);}  }
     ;
 
 
@@ -793,19 +928,27 @@ int main(int argc, char** argv)
 
     yyparse();
 
-    fprintf(f1,"\nSYMBOL       DATATYPE        SCOPE        VALUE        LINENUMBER \n");
-	fprintf(f1,"_________________________________________________________________\n\n");
+    fprintf(f1,"\nSYMBOL       MAX_DIMENSION        DATATYPE        SCOPE        VALUE        LINENUMBER \n");
+	fprintf(f1,"______________________________________________________________________________________________________\n\n");
 
     for(int i = 0; i < count; i++)
     {
         if(strcmp(symbol_table[i].data_type,"float") == 0)
         {
-            fprintf(f1,"%s\t|%s\t|%s\t|%f\t|%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].flvalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t|\t%d\t|%s\t|%s\t|%f\t|%d\n", symbol_table[i].name, symbol_table[i].dimensiuneMax, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].flvalue, symbol_table[i].line_no);
         }
         else 
-        if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0)
+        if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0 || strcmp(symbol_table[i].data_type,"char") == 0)
         {
-            fprintf(f1,"%s\t|%s\t|%s\t|%d\t|%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].ivalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t|\t%d\t|%s\t|%s\t|%d\t|%d\n", symbol_table[i].name, symbol_table[i].dimensiuneMax,symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].ivalue, symbol_table[i].line_no);
+            if(symbol_table[i].dimensiuneMax > 0)
+            {
+                for(int k=0; k < symbol_table[i].dimensiuneMax; k++)
+                {
+                    fprintf(f1, "%s[%d]\t\t|\t val=%d\n", symbol_table[i].name, k, symbol_table[i].vector[k]);
+                }
+                fprintf(f1, "................................................................................................\n");
+            }
         }
     }
 
