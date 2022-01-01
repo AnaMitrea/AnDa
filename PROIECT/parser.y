@@ -8,7 +8,7 @@
 extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
-
+int cod=0;
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
 void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
@@ -21,6 +21,8 @@ void definire_functie_cu_return(char* nume, char* argum, int expresie);
 int verificare_functie(char* nume, char* argum);
 int verif_argumente_tip_int(char* argum);
 void verificare_apel_functie(char* nume, char* listaparametri);
+void declarare_new_datatype(char* nume);
+int verificare_datatype(char* nume);
 
 void incrementare_decrementare(char* nume, char* op);
 int return_cu_variabila(char* nume);
@@ -35,7 +37,7 @@ struct variables
     char* name;
     char* scope;
     int ivalue;
-	float flvalue;
+    float flvalue;
     int hasValue;
     int line_no;
 };
@@ -91,7 +93,16 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
     symbol_table[count].ivalue = 999999;
     symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
-
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
     count++;
 }
 
@@ -123,7 +134,16 @@ void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constant
     symbol_table[count].ivalue = valoare;
     symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
-
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
     count++;
 }
 
@@ -144,7 +164,16 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
     symbol_table[count].ivalue = 999999;
     symbol_table[count].flvalue = valoare;
     symbol_table[count].line_no = yylineno;
-
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
     count++;
 }
 
@@ -197,7 +226,16 @@ void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta
         symbol_table[count].ivalue = symbol_table[decl].ivalue;
     }
     symbol_table[count].line_no = yylineno;
-
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
     count++;
 }
 
@@ -226,7 +264,16 @@ void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int const
     symbol_table[count].ivalue = valoare;
     symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
-
+    switch(cod) {
+    case 1:symbol_table[count].scope="global definition";
+           break;
+    case 2:symbol_table[count].scope="defined inside a function";
+           break;
+    case 3:symbol_table[count].scope="defined inside a new type";
+           break;
+    case 4:symbol_table[count].scope="defined inside the body";     
+           break;
+    }
     count++;
 }
 
@@ -505,7 +552,36 @@ void verificare_apel_functie(char* nume, char* listaparametri)
     }
 }
 
+void declarare_new_datatype(char* nume)
+{
+    if(verificare_datatype(nume) != -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Mai exista datatype cu acelasi nume \"%s\" ", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
 
+    symbol_table_functions[count_f].name = nume;
+    char type[] = "newtype";
+    symbol_table_functions[count_f].return_type = strdup(type);
+    symbol_table_functions[count_f].args = "";
+    symbol_table_functions[count_f].valoareReturn = 999999;
+    symbol_table_functions[count_f].line_no = yylineno;
+    count_f++;
+}
+
+int verificare_datatype(char* nume)
+{
+    for(int i = 0; i < count_f; i++)
+    {
+        if(strcmp(symbol_table_functions[i].name,nume) == 0 )
+        {
+            return i;
+        }
+    }
+    return -1;
+}
 %}
 
 %union
@@ -517,7 +593,7 @@ void verificare_apel_functie(char* nume, char* listaparametri)
 }
 
 %token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
-%token <str> ID DATATYPE UNARY CONST RETURN
+%token <str> ID DATATYPE UNARY CONST RETURN TYPE
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
@@ -543,11 +619,11 @@ program
     ;
 
 global
-    : STARTGLOBAL DOUBLE declarari ENDGLOBAL
+    :{cod=1;} STARTGLOBAL DOUBLE declarari ENDGLOBAL 
     ;
 
 functii
-    : STARTFUNCTIONS DOUBLE declfunctii ENDFUNCTIONS
+    : STARTFUNCTIONS DOUBLE declfunctii ENDFUNCTIONS 
     ;
 
 declfunctii
@@ -556,10 +632,19 @@ declfunctii
     ;
 
 decl_functii
-    : FUNCTION DATATYPE ID argumente ';'                                                    { declarare_functie($2,$3,$4); }
+    : FUNCTION DATATYPE ID argumente ';'   { declarare_functie($2,$3,$4); }
     | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'        { declarare_functie_cu_return($2,$3,$4,$9); }
     | ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'                          { definire_functie_cu_return($1,$2,$7); }
-    ;
+    | {cod=3;}TYPE DOUBLE '{' elemente '}' ID ';'  {declarare_new_datatype($7); }
+    ; 
+
+elemente : elemente element
+         | element
+         ;
+
+element : declarare
+        | statements ';'
+        ;
 
 argumente
     : '(' parametri ')'     { $$ = $2; }
@@ -577,7 +662,7 @@ bodyfunction
     ;
 
 body_function
-    : declarare
+    : {cod=2;}declarare
     | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
@@ -599,7 +684,7 @@ lista_parametri
     ;
 
 main
-    : STARTPROGRAM DOUBLE bodymain ENDPROGRAM
+    : {cod=4;}STARTPROGRAM DOUBLE bodymain ENDPROGRAM 
     ;
 
 declarari
@@ -672,7 +757,8 @@ expresie
     | NUMBER                        { $$ = $1; }
     | FLOAT_NUM                     { eroareExpresie(); }
     | BOOL_VALUE                    { $$ = $1; }
-    | ID                            { if(return_cu_variabila($1) == -999999) {eroareExpresie();} else { $$ = return_cu_variabila($1);} }
+    | ID                            { if(return_cu_variabila($1) == -999999) 
+                                    {eroareExpresie();} else { $$ = return_cu_variabila($1);} }
     ;
 
 
@@ -707,19 +793,19 @@ int main(int argc, char** argv)
 
     yyparse();
 
-    fprintf(f1,"\nSYMBOL       DATATYPE        VALUE        LINENUMBER \n");
-	fprintf(f1,"____________________________________________________________\n\n");
+    fprintf(f1,"\nSYMBOL       DATATYPE        SCOPE        VALUE        LINENUMBER \n");
+	fprintf(f1,"_________________________________________________________________\n\n");
 
     for(int i = 0; i < count; i++)
     {
         if(strcmp(symbol_table[i].data_type,"float") == 0)
         {
-            fprintf(f1,"%s\t\t|\t%s\t\t\t|\t%f\t\t\t|\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].flvalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t|%s\t|%s\t|%f\t|%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].flvalue, symbol_table[i].line_no);
         }
         else 
         if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0)
         {
-            fprintf(f1,"%s\t\t|\t%s\t\t\t|\t%d\t\t\t|\t%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].ivalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t|%s\t|%s\t|%d\t|%d\n", symbol_table[i].name, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].ivalue, symbol_table[i].line_no);
         }
     }
 
