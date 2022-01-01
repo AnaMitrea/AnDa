@@ -9,6 +9,9 @@ extern FILE* yyin;
 extern char* yytext;
 extern int yylineno;
 int cod=0;
+
+void Print(int valExpr);
+
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
 void declarare_vector(char* tip, char* nume, int dimens,int constanta);
 void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
@@ -26,6 +29,7 @@ void declarare_new_datatype(char* nume);
 int verificare_datatype(char* nume);
 
 void incrementare_decrementare(char* nume, char* op);
+void incr_decr_vector(char* nume, int dimens, char* op);
 int return_cu_variabila(char* nume);
 void asignare(char* nume, int valoare);
 void asignareVector(char* nume, int dimens, int valoare);
@@ -62,6 +66,13 @@ struct function symbol_table_functions[100];
 
 int count = 0;
 int count_f = 0;
+
+
+void Print(int valExpr)
+{
+    printf("\nValoarea Expresiei = %d\n", valExpr);
+}
+
 
 int is_declared(char* nume)
 {
@@ -325,6 +336,40 @@ void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int const
            break;
     }
     count++;
+}
+
+void incr_decr_vector(char* nume, int dimens, char* op)
+{
+    int decl = is_declared(nume);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s\" nu este declarat.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(symbol_table[decl].data_type,"int") != 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Vectorul \"%s\" nu este de tip int si nu se poate incrementa/decrementa.", nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].hasVectorValue[dimens] == 0)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s[%d]\" nu are valoare.", nume, dimens);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(strcmp(op, "++") == 0)
+        symbol_table[decl].vector[dimens] = symbol_table[decl].vector[dimens] + 1;
+    if(strcmp(op, "--") == 0)
+        symbol_table[decl].vector[dimens] = symbol_table[decl].vector[dimens] - 1;
+
 }
 
 void incrementare_decrementare(char* nume, char* op)
@@ -851,6 +896,8 @@ body_main
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
+    | PRINT '(' expresie ')' ';'    { Print($3); }
+    | PRINT '(' conditie ')' ';'    { Print($3); }
     ;
 
 els
@@ -875,13 +922,17 @@ statement
     ;
 
 statements
-    : ID UNARY                          { incrementare_decrementare($1,$2); }                
-    | UNARY ID                          { incrementare_decrementare($2,$1); }  
-    | ID ASSIGN expresie                { asignare($1,$3); }
-    | ID ASSIGN '(' expresie ')'        { asignare($1,$4); }
-    | ID ASSIGN conditie                { asignare($1,$3); }
-    | ID ASSIGN '(' conditie ')'        { asignare($1,$4); }
-    | ID dimensiuni ASSIGN expresie     { asignareVector($1,$2,$4); }
+    : ID UNARY                                  { incrementare_decrementare($1,$2); }                
+    | UNARY ID                                  { incrementare_decrementare($2,$1); }  
+    | ID ASSIGN expresie                        { asignare($1,$3); }
+    | ID ASSIGN '(' expresie ')'                { asignare($1,$4); }
+    | ID ASSIGN conditie                        { asignare($1,$3); }
+    | ID ASSIGN '(' conditie ')'                { asignare($1,$4); }
+    | ID dimensiuni ASSIGN expresie             { asignareVector($1,$2,$4); }
+    | ID dimensiuni ASSIGN '(' expresie ')'     { asignareVector($1,$2,$5); }
+    | ID dimensiuni ASSIGN '(' conditie ')'     { asignareVector($1,$2,$5); }
+    | ID dimensiuni UNARY                       { incr_decr_vector($1,$2,$3); }
+    | UNARY ID dimensiuni                       { incr_decr_vector($2,$3,$1); }
     ;
 
 expresie
