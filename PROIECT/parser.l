@@ -46,6 +46,7 @@ decr "--"
 "/"                         { return DIV; }
 "*"                         { return PROD; }
 "::"                        { return DOUBLE; }
+"newtype"                   { return TYPE; }
 
 [-]?{digit}+                                { yylval.intnum = atoi(yytext); return NUMBER; }
 [-]?{digit}+\.{digit}{1,6}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
