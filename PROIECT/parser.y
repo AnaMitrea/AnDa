@@ -23,8 +23,8 @@ void declarare_functie(char* tip, char* nume, char* argum);
 void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresie);
 void definire_functie_cu_return(char* nume, char* argum, int expresie);
 int verificare_functie(char* nume, char* argum);
-int verif_argumente_tip_int(char* argum);
 void verificare_apel_functie(char* nume, char* listaparametri);
+
 void declarare_new_datatype(char* nume);
 int verificare_datatype(char* nume);
 
@@ -574,53 +574,12 @@ int verificare_functie(char* nume, char* argum)
     return -1;
 }
 
-int verif_argumente_tip_int(char* argum)
-{
-    char* ptr = strstr(argum, "bool");
-    if(ptr != NULL)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia are argumente de tip bool.");
-        yyerror(errmsg);
-        return -1;
-    }
-
-    ptr = strstr(argum, "char");
-    if(ptr != NULL)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia are argumente de tip char.");
-        yyerror(errmsg);
-        return -1;
-    }
-
-    ptr = strstr(argum, "float");
-    if(ptr != NULL)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia are argumente de tip float.");
-        yyerror(errmsg);
-        return -1;
-    }
-
-    return 1;
-}
-
 void declarare_functie(char* tip, char* nume, char* argum)
 {
     if(verificare_functie(nume,argum) != -1)
     {
         char errmsg[300];
         sprintf(errmsg, "Functia \"%s\" are aceeasi signatura.", nume);
-        yyerror(errmsg);
-        exit(0);
-    }
-
-    int verif = verif_argumente_tip_int(argum);
-    if(verif == -1)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia \"%s\" nu are toate argumentele de tip int.", nume);
         yyerror(errmsg);
         exit(0);
     }
@@ -639,15 +598,6 @@ void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresi
     {
         char errmsg[300];
         sprintf(errmsg, "Functia \"%s\" are aceeasi signatura.", nume);
-        yyerror(errmsg);
-        exit(0);
-    }
-
-    int verif = verif_argumente_tip_int(argum);
-    if(verif == -1)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia \"%s\" nu are toate argumentele de tip int.", nume);
         yyerror(errmsg);
         exit(0);
     }
@@ -765,8 +715,8 @@ int verificare_datatype(char* nume)
     float flnum;
 }
 
-%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM CHARACTER PRINT STRING FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR STR ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
-%token <str> ID DATATYPE UNARY CONST RETURN TYPE
+%token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM PRINT FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR  ASSIGN FUNCTION DOUBLE PLUS MINUS DIV PROD
+%token <str> ID DATATYPE UNARY CONST RETURN TYPE STRING CHAR CHARACTER STR
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
@@ -805,8 +755,12 @@ declfunctii
     ;
 
 decl_functii
-    : FUNCTION DATATYPE ID argumente ';'   { declarare_functie($2,$3,$4); }
+    : FUNCTION DATATYPE ID argumente ';'                                                    { declarare_functie($2,$3,$4); }
     | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'        { declarare_functie_cu_return($2,$3,$4,$9); }
+    | FUNCTION STRING ID argumente ';'                                                      { declarare_functie($2,$3,$4); }
+    | FUNCTION STRING ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'          { declarare_functie_cu_return($2,$3,$4,$9); }
+    | FUNCTION CHAR ID argumente ';'                                                        { declarare_functie($2,$3,$4); }
+    | FUNCTION CHAR ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'            { declarare_functie_cu_return($2,$3,$4,$9); }
     | ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'                          { definire_functie_cu_return($1,$2,$7); }
     | {cod=3;} TYPE DOUBLE '{' elemente '}' ID ';'  {declarare_new_datatype($7); }
     ; 
@@ -826,7 +780,11 @@ argumente
 
 parametri
     : DATATYPE                   { $$ = $1; }
+    | CHAR                       { $$ = $1; }
+    | STRING                     { $$ = $1; }
     | parametri ',' DATATYPE     { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    | parametri ',' STRING       { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    | parametri ',' CHAR         { $$ = $1; strcat($$, ", "); strcat($$, $3); }
     ;
 
 bodyfunction
@@ -878,6 +836,20 @@ declarare
     | CONST DATATYPE ID ASSIGN ID ';'               { declarare_cu_init_variabila($2,$3,$5,1); }
     | DATATYPE ID dimensiuni ';'                    { declarare_vector($1,$2,$3,0); }
     | CONST DATATYPE ID dimensiuni ';'              { declarare_vector($2,$3,$4,1); }  
+    | STRING ID ';'
+    | CONST STRING ID ';'                           { yyerror("Variabila de tip const trebuie initializata cu o valoare."); exit(0); }
+    | STRING ID ASSIGN STR ';'
+    | CONST STRING ID ASSIGN STR ';'                
+    | STRING ID ASSIGN CHARACTER ';'
+    | CONST STRING ID ASSIGN CHARACTER ';'          
+    | CHAR ID ';'
+    | CONST CHAR ID ';'                             { yyerror("Variabila de tip const trebuie initializata cu o valoare."); exit(0); }
+    | CHAR ID ASSIGN CHARACTER ';'
+    | CONST CHAR ID ASSIGN CHARACTER ';'            
+    | CHAR ID dimensiuni ';'
+    | CONST CHAR ID dimensiuni ';'                  { yyerror("Sirul nu poate fi de tip const."); exit(0); }
+    | CHAR ID dimensiuni ASSIGN STR ';'
+    | CONST CHAR ID dimensiuni ASSIGN STR ';'       { yyerror("Sirul nu poate fi de tip const."); exit(0); }
     ;
 
 dimensiuni
@@ -928,6 +900,7 @@ statements
     | ID ASSIGN '(' expresie ')'                { asignare($1,$4); }
     | ID ASSIGN conditie                        { asignare($1,$3); }
     | ID ASSIGN '(' conditie ')'                { asignare($1,$4); }
+    | ID ASSIGN '{' apelarefunctie '}'
     | ID dimensiuni ASSIGN expresie             { asignareVector($1,$2,$4); }
     | ID dimensiuni ASSIGN '(' expresie ')'     { asignareVector($1,$2,$5); }
     | ID dimensiuni ASSIGN '(' conditie ')'     { asignareVector($1,$2,$5); }
@@ -939,7 +912,7 @@ expresie
     : expresie PLUS expresie        { $$ = $1 + $3; }
     | expresie MINUS expresie       { $$ = $1 - $3; }
     | expresie PROD expresie        { $$ = $1 * $3; }
-    | expresie DIV expresie         { if($3 == 0) {yyerror("Impartire la zero!");}  $$ = $1 / $3; }
+    | expresie DIV expresie         { if($3 == 0) {yyerror("Impartire la zero!"); exit(0);}  $$ = $1 / $3; }
     | NUMBER                        { $$ = $1; }
     | FLOAT_NUM                     { eroareExpresie(); }
     | BOOL_VALUE                    { $$ = $1; }
