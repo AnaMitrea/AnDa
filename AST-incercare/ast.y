@@ -10,32 +10,6 @@ extern char* yytext;
 extern int yylineno;
 int cod=0;
 
-void Print(int valExpr);
-
-void declarare_fara_initializare(char* tip, char* nume, int constanta);
-void declarare_vector(char* tip, char* nume, int dimens,int constanta);
-void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
-void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
-void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
-void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
-
-void declarare_functie(char* tip, char* nume, char* argum);
-void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresie);
-void definire_functie_cu_return(char* nume, char* argum, int expresie);
-int verificare_functie(char* nume, char* argum);
-void verificare_apel_functie(char* nume, char* listaparametri);
-
-void declarare_new_datatype(char* nume);
-int verificare_datatype(char* nume);
-
-void incrementare_decrementare(char* nume, char* op);
-void incr_decr_vector(char* nume, int dimens, char* op);
-int return_cu_variabila(char* nume);
-void asignare(char* nume, int valoare);
-void asignareVector(char* nume, int dimens, int valoare);
-int is_declared(char* nume);
-void eroareExpresie();
-
 struct variables 
 {
     char* data_type;
@@ -79,10 +53,39 @@ struct AST
     char* numevar;
 };
 
+
+void Print(struct AST* tree);
+
+/* FUNCTII PENTRU DECLARARI DE VARIABILE */
+void declarare_fara_initializare(char* tip, char* nume, int constanta);
+void declarare_vector(char* tip, char* nume, int dimens,int constanta);
+void declarare_cu_init_intnumar(char* tip, char* nume, int valoare, int constanta);
+void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int constanta);
+void declarare_cu_init_boolnumar(char* tip, char* nume, _Bool valoare, int constanta);
+void declarare_cu_init_variabila(char* tip, char* nume, char* var, int constanta);
+
+void declarare_functie(char* tip, char* nume, char* argum);
+void declarare_functie_cu_return(char* tip, char* nume, char* argum, int expresie);
+void definire_functie_cu_return(char* nume, char* argum, int expresie);
+int verificare_functie(char* nume, char* argum);
+void verificare_apel_functie(char* nume, char* listaparametri);
+
+void declarare_new_datatype(char* nume);
+int verificare_datatype(char* nume);
+
+void incrementare_decrementare(char* nume, char* op);
+void incr_decr_vector(char* nume, int dimens, char* op);
+int return_valoare_variabila(char* nume);
+void asignare(char* nume, int valoare);
+void asignareVector(char* nume, int dimens, int valoare);
+int is_declared(char* nume);
+void eroareExpresie();
+
+
 struct AST* buildAST(char* nume, struct AST* stanga, struct AST* dreapta, enum NodeType tip)
 {
     struct AST* temp = (struct AST*)malloc(sizeof(struct AST));
-    temp->numevar = nume;
+    temp->numevar = strdup(nume);
     temp->left = stanga;
     temp->right = dreapta;
     temp->node_type = tip;
@@ -101,9 +104,134 @@ void SDR(struct AST* tree)
     printf("Numevar= %s, node_type= %d\n\n", tree->numevar, tree->node_type);
 }
 
-void Print(int valExpr)
+int EvalAST(struct AST* tree)
 {
-    printf("\nValoarea Expresiei = %d\n", valExpr);
+    /* 
+        OP=1, IDENTIF=2, NR=3, ARRAY_ELEM=4, OTHER=5
+    */
+
+    if(tree->left == NULL && tree->right == NULL) // Inseamna ca is pe o frunza
+    {
+        if(tree->node_type == 2) // Indentificator
+        {
+            int nrValue = return_valoare_variabila(tree->numevar);
+            if(nrValue == -999999)
+            {
+                eroareExpresie();
+            }
+            else
+            {
+                return nrValue;
+            }
+        }
+        else
+        if(tree->node_type == 3) // Numar
+        {
+            int nrValue = atoi(tree->numevar);
+            printf("numevar= %s & nrValue= %d.\n", tree->numevar, nrValue);
+
+            return nrValue;
+        }
+        else
+        if(tree->node_type == 4)  // element din vector
+        {
+            // tree->numevar contine "abc4[2]"
+            //                        id = "abc4" si dimens="2"
+
+            char* id;
+            int poz = 0, j = 0;
+
+            for(int i = 0; i < strlen(tree->numevar); i++)
+            {
+                if(tree->numevar[i] == '[')
+                {
+                    poz = i;
+                    break;
+                }
+                id[j] = tree->numevar[i];
+                j++;
+            }
+            id[j] = '\0';
+            char* dimens;
+
+            j = 0;
+            for(int i = poz + 1; i < strlen(tree->numevar); i++)
+            {
+                if(tree->numevar[i] == ']')
+                {
+                    break;
+                }
+                dimens[j] = tree->numevar[i];
+                j++;
+            }
+            dimens[j] = '\0';
+
+            int dimensiune = atoi(dimens);
+            printf("tree->numevar= \"%s\", id= \"%s\", dimens= \"%s\", dimensiune int= %d\n", tree->numevar, id, dimens, dimensiune);
+            
+            int nrValue = return_Valoare_Vector(id, dimensiune); // returneaza -999999 daca data_type la vector e diferit de int si bool
+
+            if(nrValue == -999999)
+            {
+                eroareExpresie(); 
+            }
+            else
+            {
+                return nrValue;
+            }
+        }
+        else
+        if(tree->node_type == 5)
+        {
+            return 0;
+        }
+    }
+    else // inseamna ca is pe un nod intern 
+    {
+        int valoareLeft = EvalAST(tree->left);
+        int valoareRight = EvalAST(tree->right);
+
+        char* operator = (char*) malloc(strlen(tree->numevar) + 1);
+        strcpy(operator,tree->numevar);
+        
+        if(strcmp(operator,"+") == 0)
+        {
+            int result = valoareLeft + valoareRight;
+            return result;
+        }
+        else
+        if(strcmp(operator,"-") == 0)
+        {
+            int result = valoareLeft - valoareRight;
+            return result;
+        }
+        else
+        if(strcmp(operator,"*") == 0)
+        {
+            int result = valoareLeft * valoareRight;
+            return result;
+        }
+        else
+        if(strcmp(operator,"/") == 0)
+        {
+            if(valoareRight == 0)
+            {
+                yyerror("Impatirea la zero nu este posibila!");
+                exit(0);
+            }
+            else
+            {
+                int result = valoareLeft / valoareRight;
+                return result;
+            }
+        }
+    }
+    
+}
+
+void Print(struct AST* tree)
+{
+    printf("\nValoarea Expresiei = %d\n", EvalAST(tree));
 }
 
 
@@ -446,7 +574,7 @@ void incrementare_decrementare(char* nume, char* op)
         symbol_table[decl].ivalue = symbol_table[decl].ivalue - 1;
 }
 
-int return_cu_variabila(char* nume)
+int return_valoare_variabila(char* nume)
 {
     int decl = is_declared(nume);
 
@@ -750,17 +878,21 @@ int verificare_datatype(char* nume)
 }
 
 %token STARTGLOBAL ENDGLOBAL STARTFUNCTIONS ENDFUNCTIONS STARTPROGRAM ENDPROGRAM PRINT FOR IF WHILE ELSE LE GE EQ NE GT LT AND OR ASSIGN FUNCTION DOUBLE
+
 %token <str> ID DATATYPE UNARY CONST RETURN TYPE STRING CHAR CHARACTER STR PLUS MINUS DIV PROD
 %token <intnum> NUMBER
 %token <flnum> FLOAT_NUM
 %token <boolnum> BOOL_VALUE
+
 %type <tree> expresie
+%type <intnum> conditie dimensiuni
+%type <str> decl_functii argumente parametri apelarefunctie listaparametri lista_parametri
+
 %left MINUS PLUS 
 %left PROD DIV
 %left UNARY
 
 %start prog
-
 %%
 
 
@@ -768,12 +900,125 @@ prog : program { printf("\nProgram corect sintactic!\n\n"); }
 ;
 
 program 
-    : main
+    : global functii main
+    | functii main
+    | global main
+    | main
     ;
 
+global
+    : {cod=1;} STARTGLOBAL DOUBLE declarari ENDGLOBAL 
+    ;
+
+functii
+    : STARTFUNCTIONS DOUBLE declfunctii ENDFUNCTIONS 
+    ;
+
+declfunctii
+    : decl_functii
+    | declfunctii decl_functii
+    ;
+
+decl_functii
+    : FUNCTION DATATYPE ID argumente ';'                                                    { declarare_functie($2,$3,$4); }
+    | FUNCTION DATATYPE ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'        { int res = EvalAST($9); declarare_functie_cu_return($2,$3,$4,res); }
+    | FUNCTION STRING ID argumente ';'                                                      { declarare_functie($2,$3,$4); }
+    | FUNCTION STRING ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'          { int res = EvalAST($9); declarare_functie_cu_return($2,$3,$4,res); }
+    | FUNCTION CHAR ID argumente ';'                                                        { declarare_functie($2,$3,$4); }
+    | FUNCTION CHAR ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'            { int res = EvalAST($9); declarare_functie_cu_return($2,$3,$4,res); }
+    | ID argumente DOUBLE '{' bodyfunction RETURN expresie ';' '}'                          { int res = EvalAST($7); definire_functie_cu_return($1,$2,res); }
+    | {cod=3;} TYPE DOUBLE '{' elemente '}' ID ';'  {declarare_new_datatype($7); }
+    ; 
+
+elemente : elemente element
+         | element
+         ;
+
+element : declarare
+        | statements ';'
+        ;
+
+argumente
+    : '(' parametri ')'     { $$ = $2; }
+    | '(' ')'               { $$ = malloc(100); $$[0] = 0; }
+    ;
+
+parametri
+    : DATATYPE                   { $$ = $1; }
+    | CHAR                       { $$ = $1; }
+    | STRING                     { $$ = $1; }
+    | parametri ',' DATATYPE     { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    | parametri ',' STRING       { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    | parametri ',' CHAR         { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    ;
+
+bodyfunction
+    : body_function
+    | bodyfunction body_function
+    ;
+
+body_function
+    : {cod=2;} declarare
+    | statements ';'
+    | IF '(' conditie ')' DOUBLE '{' statement '}' els
+    | WHILE '(' conditie ')' DOUBLE '{' statement '}'
+    | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
+    ;
+
+apelarefunctie
+    : ID '(' listaparametri ')'             { verificare_apel_functie($1,$3); }          
+    ;
+
+listaparametri
+    : lista_parametri                       { $$ = $1; }   
+    | listaparametri ',' lista_parametri    { $$ = $1; strcat($$, ", "); strcat($$, $3); }
+    ;
+
+lista_parametri
+    : expresie          { $$ = malloc(100); strcpy($$,"int");}
+    | apelarefunctie    { $$ = $1; strcat($$,", ");}
+    ;
 
 main
-    : {cod=4;} STARTPROGRAM DOUBLE bodymain ENDPROGRAM 
+    : { cod=4; } STARTPROGRAM DOUBLE bodymain ENDPROGRAM 
+    ;
+
+declarari
+    : declarari declarare
+    | declarare
+    ;
+
+declarare
+    : DATATYPE ID ';'                               { declarare_fara_initializare($1,$2,0); }
+    | CONST DATATYPE ID ';'                         { declarare_fara_initializare($2,$3,1); }
+    | DATATYPE ID ASSIGN NUMBER ';'                 { declarare_cu_init_intnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN NUMBER ';'           { declarare_cu_init_intnumar($2,$3,$5,1); }
+    | DATATYPE ID ASSIGN FLOAT_NUM ';'              { declarare_cu_init_floatnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN FLOAT_NUM ';'        { declarare_cu_init_floatnumar($2,$3,$5,1); }
+    | DATATYPE ID ASSIGN BOOL_VALUE ';'             { declarare_cu_init_boolnumar($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN BOOL_VALUE ';'       { declarare_cu_init_boolnumar($2,$3,$5,1); } 
+    | DATATYPE ID ASSIGN ID ';'                     { declarare_cu_init_variabila($1,$2,$4,0); }
+    | CONST DATATYPE ID ASSIGN ID ';'               { declarare_cu_init_variabila($2,$3,$5,1); }
+    | DATATYPE ID dimensiuni ';'                    { declarare_vector($1,$2,$3,0); }
+    | CONST DATATYPE ID dimensiuni ';'              { declarare_vector($2,$3,$4,1); }  
+    | STRING ID ';'
+    | CONST STRING ID ';'                           { yyerror("Variabila de tip const trebuie initializata cu o valoare."); exit(0); }
+    | STRING ID ASSIGN STR ';'
+    | CONST STRING ID ASSIGN STR ';'                
+    | STRING ID ASSIGN CHARACTER ';'
+    | CONST STRING ID ASSIGN CHARACTER ';'          
+    | CHAR ID ';'
+    | CONST CHAR ID ';'                             { yyerror("Variabila de tip const trebuie initializata cu o valoare."); exit(0); }
+    | CHAR ID ASSIGN CHARACTER ';'
+    | CONST CHAR ID ASSIGN CHARACTER ';'            
+    | CHAR ID dimensiuni ';'
+    | CONST CHAR ID dimensiuni ';'                  { yyerror("Sirul nu poate fi de tip const."); exit(0); }
+    | CHAR ID dimensiuni ASSIGN STR ';'
+    | CONST CHAR ID dimensiuni ASSIGN STR ';'       { yyerror("Sirul nu poate fi de tip const."); exit(0); }
+    ;
+
+dimensiuni
+    : '[' NUMBER ']'        { $$ = $2; }
     ;
 
 bodymain
@@ -782,11 +1027,49 @@ bodymain
     ;
 
 body_main
-    : statements ';'
+    : declarare
+    | apelarefunctie ';'                                                            
+    | statements ';'
+    | IF '(' conditie ')' DOUBLE '{' statement '}' els
+    | WHILE '(' conditie ')' DOUBLE '{' statement '}'
+    | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
+    | PRINT '(' expresie ')' ';'    { Print($3); }
+    ;
+
+els
+    : ELSE DOUBLE '{' statement '}'
+    | 
+    ;
+
+conditie
+    : expresie LT expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 < res2); }
+    | expresie GT expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 > res2); }
+    | expresie LE expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 <= res2); }
+    | expresie GE expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 >= res2); }
+    | expresie EQ expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 == res2); }
+    | expresie NE expresie          { int res1 = EvalAST($1); int res2 = EvalAST($3); $$ = (res1 != res2); }
+    | '(' conditie AND conditie ')' { $$ = ($2 && $4); }
+    | '(' conditie OR conditie ')'  { $$ = ($2 || $4); }
+    ;
+
+statement
+    : statement statements ';'
+    | statements ';'
     ;
 
 statements
-    : '{' ':' expresie ':' '}'
+    : ID UNARY                                  { incrementare_decrementare($1,$2); }                
+    | UNARY ID                                  { incrementare_decrementare($2,$1); }  
+    | ID ASSIGN expresie                        { int result = EvalAST($3); asignare($1,result); }
+    | ID ASSIGN '(' expresie ')'                { int result = EvalAST($4); asignare($1,result); }
+    | ID ASSIGN conditie                        { asignare($1,$3); }
+    | ID ASSIGN '(' conditie ')'                { asignare($1,$4); }
+    | ID ASSIGN '{' apelarefunctie '}'          
+    | ID dimensiuni ASSIGN expresie             { int result = EvalAST($4); asignareVector($1,$2,result); }
+    | ID dimensiuni ASSIGN '(' expresie ')'     { int result = EvalAST($5); asignareVector($1,$2,result); }
+    | ID dimensiuni ASSIGN '(' conditie ')'     { asignareVector($1,$2,$5); }
+    | ID dimensiuni UNARY                       { incr_decr_vector($1,$2,$3); }
+    | UNARY ID dimensiuni                       { incr_decr_vector($2,$3,$1); }
     ;
 
 expresie
@@ -794,10 +1077,19 @@ expresie
     | expresie PLUS expresie        { $$ = buildAST($2,$1,$3,OP); SDR($$); }
     | expresie PROD expresie        { $$ = buildAST($2,$1,$3,OP); SDR($$); }
     | expresie DIV expresie         { $$ = buildAST($2,$1,$3,OP); SDR($$); }
-    | NUMBER                        { char* buffer = malloc(100*sizeof(char)); int nr = $1; sprintf(buffer,"%d",nr); $$ = buildAST(buffer,NULL,NULL,NR);}
+    | NUMBER                        { char* buffer = malloc(10*sizeof(char)); int nr = $1; sprintf(buffer,"%d",nr); $$ = buildAST(buffer,NULL,NULL,NR); SDR($$);}
     | FLOAT_NUM                     { eroareExpresie(); }
     | BOOL_VALUE                    { eroareExpresie(); }
     | ID                            { $$ = buildAST($1,NULL,NULL,IDENTIF);}
+    | ID dimensiuni                 { char* buffer = malloc(100*sizeof(char)); 
+                                      int dim = $2; 
+                                      strcpy(buffer,$1); 
+                                      char* temp = malloc(100*sizeof(char)); 
+                                      sprintf(temp,"%d",dim); 
+                                      strcat(buffer,"[");  strcat(buffer,temp); strcat(buffer,"]");
+                                      $$ = buildAST(buffer,NULL,NULL,ARRAY_ELEM);
+                                      SDR($$);
+                                    }
     ;
 
 
