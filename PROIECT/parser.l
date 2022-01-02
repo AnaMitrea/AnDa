@@ -18,12 +18,13 @@ decr "--"
 "start_program"             { return STARTPROGRAM; }
 "end_program"               { return ENDPROGRAM; }
 
-"print"                     { return PRINT; }
-"function"                  { yylval.str = strdup(yytext); return FUNCTION; }
-"const"                     { yylval.str = strdup(yytext); return CONST; }
-"int"|"float"|"char"|"bool" { yylval.str = strdup(yytext); return DATATYPE; }
-"string"                    { return STRING; }
-"return"                    { yylval.str = strdup(yytext); return RETURN; }
+"Print"                     { return PRINT; }
+"function"                  { return FUNCTION; }
+"const"                     { return CONST; }
+"int"|"float"|"bool"        { yylval.str = strdup(yytext); return DATATYPE; }
+"char"                      { yylval.str = strdup(yytext); return CHAR; }  
+"string"                    { yylval.str = strdup(yytext); return STRING; }
+"return"                    { return RETURN; }
 "for"	                    { return FOR; }
 "if"	                    { return IF; }
 "while"                     { return WHILE; }
@@ -51,7 +52,7 @@ decr "--"
 [-]?{digit}+                                { yylval.intnum = atoi(yytext); return NUMBER; }
 [-]?{digit}+\.{digit}{1,6}                  { yylval.flnum = atof(yytext); return FLOAT_NUM; }
 ["].*["]                                    { yylval.str = strdup(yytext); return STR; }
-['].[']                                     { return CHARACTER; }
+['].[']                                     { yylval.str = strdup(yytext); return CHARACTER; }
 {alpha}({alpha}|{digit})*                   { yylval.str = strdup(yytext); return ID; }
 "++"|"--"                                   { yylval.str = strdup(yytext); return UNARY; }
 
