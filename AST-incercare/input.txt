@@ -1,6 +1,8 @@
 start_functions::
 
-function int sum()::
+function int suma(int);
+
+function int sum(int,int)::
 {
     int nr1 -> 10;
     int nr2 -> 20;
@@ -12,8 +14,14 @@ function int sum()::
 end_functions
 
 start_program::
-int result;
+int vect[2];
+vect[0] -> 10;
+vect[1] -> 2;
 
-result -> 2 * (7 + 10);
+int result;
+result -> 1;
+
+Print("Valoarea expresiei result+1 este", result + 1);
+
 
 end_program
