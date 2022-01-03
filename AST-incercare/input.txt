@@ -1,8 +1,20 @@
+start_global::
+
+bool var1 -> TRUE;
+bool var2 -> FALSE;
+bool var3 -> 1;
+char c;
+int poz -> 100;
+int neg -> -1002;
+const int abc -> 0;
+string arr;
+
+end_global
 start_functions::
 
-function int suma(int);
+function int sum(int,int);
 
-function int sum(int,int)::
+function int sum()::
 {
     int nr1 -> 10;
     int nr2 -> 20;
@@ -11,6 +23,12 @@ function int sum(int,int)::
     return res;
 }
 
+newtype::
+{
+    int a;
+    const int b -> 10;
+} myType;
+
 end_functions
 
 start_program::
@@ -18,10 +36,19 @@ int vect[2];
 vect[0] -> 10;
 vect[1] -> 2;
 
+Print("Valoarea expresiei vect[1] este", vect[1]);
+
 int result;
-result -> 1;
+result -> 10 * 10;
 
 Print("Valoarea expresiei result+1 este", result + 1);
+result -> {sum()};
+Print("Valoarea expresiei result este", result);
 
+if(result == 30)::
+{
+    result++;
+}
+Print("Valoarea expresiei result este", result);
 
 end_program
