@@ -54,7 +54,7 @@ struct AST
 };
 
 
-void Print(struct AST* tree);
+void Print(char* msg, struct AST* tree);
 
 /* FUNCTII PENTRU DECLARARI DE VARIABILE */
 void declarare_fara_initializare(char* tip, char* nume, int constanta);
@@ -135,8 +135,7 @@ int EvalAST(struct AST* tree)
         {
             // tree->numevar contine "abc4[2]"
             //                        id = "abc4" si dimens="2"
-
-            char* id;
+            char id[100];
             int poz = 0, j = 0;
 
             for(int i = 0; i < strlen(tree->numevar); i++)
@@ -150,8 +149,8 @@ int EvalAST(struct AST* tree)
                 j++;
             }
             id[j] = '\0';
-            char* dimens;
 
+            char dimens[100];
             j = 0;
             for(int i = poz + 1; i < strlen(tree->numevar); i++)
             {
@@ -165,8 +164,6 @@ int EvalAST(struct AST* tree)
             dimens[j] = '\0';
 
             int dimensiune = atoi(dimens);
-            printf("tree->numevar= \"%s\", id= \"%s\", dimens= \"%s\", dimensiune int= %d\n", tree->numevar, id, dimens, dimensiune);
-            
             int nrValue = return_Valoare_Vector(id, dimensiune); // returneaza -999999 daca data_type la vector e diferit de int si bool
 
             if(nrValue == -999999)
@@ -227,9 +224,9 @@ int EvalAST(struct AST* tree)
     
 }
 
-void Print(struct AST* tree)
+void Print(char* msg, struct AST* tree)
 {
-    printf("\nValoarea Expresiei = %d\n", EvalAST(tree));
+    printf("\n%s : %d.\n", msg, EvalAST(tree));
 }
 
 
@@ -642,6 +639,77 @@ void asignare(char* nume, int valoare)
     symbol_table[decl].ivalue = valoare;
 }
 
+void asignareFunctie(char* nume, char* apelfunctie)
+{
+    int decl = is_declared(nume);
+    if(decl == -1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Variabila \"%s\" nu este declarata",nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+    if(symbol_table[decl].isConst == 1)
+    {
+        char errmsg[300];
+        sprintf(errmsg, "Nu se poate asigna o valoare variabilei de tip const \"%s\" ",nume);
+        yyerror(errmsg);
+        exit(0);
+    }
+
+
+    char id[100];
+    int poz = 0, j = 0;
+
+    for(int i = 0; i < strlen(apelfunctie); i++)
+    {
+        if(apelfunctie[i] == '[')
+        {
+            poz = i;
+            break;
+        }
+        id[j] = apelfunctie[i];
+        j++;
+    }
+    id[j] = '\0';
+
+    char parametri[100];
+    j = 0;
+    for(int i = poz + 1; i < strlen(apelfunctie); i++)
+    {
+        if(apelfunctie[i] == ']')
+        {
+            break;
+        }
+        parametri[j] = apelfunctie[i];
+        j++;
+    }
+    parametri[j] = '\0';
+
+    printf("id=\"%s\" si parametri=%s\n",id,parametri);
+    int valoare;
+    for(int i = 0; i < count_f; i++)
+    {
+        if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,parametri) == 0)
+        {
+            valoare = symbol_table_functions[i].valoareReturn;
+        }
+    }
+
+    if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
+    {
+        if(valoare != 1 && valoare != 0)
+        {
+            char errmsg[300];
+            sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 variabilei de tip bool \"%s\" ",nume);
+            yyerror(errmsg);
+            exit(0);
+        }
+    }
+    symbol_table[decl].ivalue = valoare;
+}
+
 void asignareVector(char* nume, int dimens, int valoare)
 {
     int decl = is_declared(nume);
@@ -814,26 +882,26 @@ void verificare_apel_functie(char* nume, char* listaparametri)
     if(strcmp(listaparametri, "fara_parametri") != 0)
     {
         int countVirgule1 = 0;
-    for(int i = 0; i < strlen(symbol_table_functions[ok].args); i++)
-    {
-        if(symbol_table_functions[ok].args[i] == ',')
-            countVirgule1++;
-    }
-    
-    int countVirgule2 = 0;
-    for(int i = 0; i < strlen(listaparametri); i++)
-    {
-        if(listaparametri[i] == ',')
-            countVirgule2++;
-    }
+        for(int i = 0; i < strlen(symbol_table_functions[ok].args); i++)
+        {
+            if(symbol_table_functions[ok].args[i] == ',')
+                countVirgule1++;
+        }
+        
+        int countVirgule2 = 0;
+        for(int i = 0; i < strlen(listaparametri); i++)
+        {
+            if(listaparametri[i] == ',')
+                countVirgule2++;
+        }
 
-    if(countVirgule1 != countVirgule2)
-    {
-        char errmsg[300];
-        sprintf(errmsg, "Functia \"%s\" apelata nu are acelasi numar de parametri.", nume);
-        yyerror(errmsg);
-        exit(0);
-    }
+        if(countVirgule1 != countVirgule2)
+        {
+            char errmsg[300];
+            sprintf(errmsg, "Functia \"%s\" apelata nu are acelasi numar de parametri.", nume);
+            yyerror(errmsg);
+            exit(0);
+        }
     }
 }
 
@@ -966,8 +1034,8 @@ body_function
     ;
 
 apelarefunctie
-    : ID '(' listaparametri ')'             { verificare_apel_functie($1,$3); }
-    | ID '(' ')'                            { verificare_apel_functie($1,"fara_parametri"); }
+    : ID '(' listaparametri ')'      { verificare_apel_functie($1,$3); strcpy($$,$1); strcat($$,"["); strcat($$,$3); strcat($$,"]"); }
+    | ID '(' ')'                     { verificare_apel_functie($1,"fara_parametri"); strcpy($$,$1); strcat($$,"[");strcat($$,"fara_parametri"); strcat($$,"]");}
     ;
 
 listaparametri
@@ -1028,13 +1096,12 @@ bodymain
     ;
 
 body_main
-    : declarare
-    | apelarefunctie ';'                                                            
+    : declarare                                                   
     | statements ';'
     | IF '(' conditie ')' DOUBLE '{' statement '}' els
     | WHILE '(' conditie ')' DOUBLE '{' statement '}'
     | FOR '(' statements conditie ';' statements ')' DOUBLE '{' statement '}'
-    | PRINT '(' expresie ')' ';'    { Print($3); }
+    | PRINT '(' STR ',' expresie ')' ';'    { Print($3,$5); }
     ;
 
 els
@@ -1063,7 +1130,7 @@ statements
     | UNARY ID                                  { incrementare_decrementare($2,$1); }  
     | ID ASSIGN expresie                        { int result = EvalAST($3); asignare($1,result); }
     | ID ASSIGN conditie                        { asignare($1,$3); }
-    | ID ASSIGN '{' apelarefunctie '}'          
+    | ID ASSIGN '{' apelarefunctie '}'          { asignareFunctie($1,$4); }
     | ID dimensiuni ASSIGN expresie             { int result = EvalAST($4); asignareVector($1,$2,result); }
     | ID dimensiuni ASSIGN conditie             { asignareVector($1,$2,$4); }
     | ID dimensiuni UNARY                       { incr_decr_vector($1,$2,$3); }
@@ -1071,19 +1138,18 @@ statements
     ;
 
 expresie
-    : expresie MINUS expresie               { $$ = buildAST($2,$1,$3,OP); SDR($$); }
-    | expresie PLUS expresie                { $$ = buildAST($2,$1,$3,OP); SDR($$); }
-    | expresie PROD expresie                { $$ = buildAST($2,$1,$3,OP); SDR($$); }
-    | expresie DIV expresie                 { $$ = buildAST($2,$1,$3,OP); SDR($$); }
-    | '(' expresie MINUS expresie ')'       { $$ = buildAST($3,$2,$4,OP); SDR($$); }
-    | '(' expresie PLUS expresie ')'        { $$ = buildAST($3,$2,$4,OP); SDR($$); }
-    | '(' expresie PROD expresie ')'        { $$ = buildAST($3,$2,$4,OP); SDR($$); }
-    | '(' expresie DIV expresie ')'         { $$ = buildAST($3,$2,$4,OP); SDR($$); }
+    : expresie MINUS expresie               { $$ = buildAST($2,$1,$3,OP);  }
+    | expresie PLUS expresie                { $$ = buildAST($2,$1,$3,OP); }
+    | expresie PROD expresie                { $$ = buildAST($2,$1,$3,OP); }
+    | expresie DIV expresie                 { $$ = buildAST($2,$1,$3,OP); }
+    | '(' expresie MINUS expresie ')'       { $$ = buildAST($3,$2,$4,OP); }
+    | '(' expresie PLUS expresie ')'        { $$ = buildAST($3,$2,$4,OP); }
+    | '(' expresie PROD expresie ')'        { $$ = buildAST($3,$2,$4,OP); }
+    | '(' expresie DIV expresie ')'         { $$ = buildAST($3,$2,$4,OP); }
     | NUMBER                                { 
                                                 char* buffer = malloc(10*sizeof(char)); 
                                                 int nr = $1; sprintf(buffer,"%d",nr); 
                                                 $$ = buildAST(buffer,NULL,NULL,NR); 
-                                                SDR($$);
                                             }
     | FLOAT_NUM                             { eroareExpresie(); }
     | BOOL_VALUE                            { eroareExpresie(); }
@@ -1096,7 +1162,6 @@ expresie
                                                 sprintf(temp,"%d",dim); 
                                                 strcat(buffer,"[");  strcat(buffer,temp); strcat(buffer,"]");
                                                 $$ = buildAST(buffer,NULL,NULL,ARRAY_ELEM);
-                                                SDR($$);
                                             }
     ;
 
