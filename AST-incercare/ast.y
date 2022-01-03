@@ -221,14 +221,12 @@ int EvalAST(struct AST* tree)
             }
         }
     }
-    
 }
 
 void Print(char* msg, struct AST* tree)
 {
     printf("\n%s : %d.\n", msg, EvalAST(tree));
 }
-
 
 int is_declared(char* nume)
 {
@@ -658,7 +656,7 @@ void asignareFunctie(char* nume, char* apelfunctie)
         exit(0);
     }
 
-
+       
     char id[100];
     int poz = 0, j = 0;
 
@@ -687,27 +685,69 @@ void asignareFunctie(char* nume, char* apelfunctie)
     }
     parametri[j] = '\0';
 
-    printf("id=\"%s\" si parametri=%s\n",id,parametri);
-    int valoare;
-    for(int i = 0; i < count_f; i++)
+    if(strcmp(parametri,"fara_parametri") != 0)
     {
-        if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,parametri) == 0)
+        int valoare;
+        for(int i = 0; i < count_f; i++)
         {
-            valoare = symbol_table_functions[i].valoareReturn;
+            if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,parametri) == 0)
+            {
+                valoare = symbol_table_functions[i].valoareReturn;
+            }
         }
-    }
 
-    if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
-    {
-        if(valoare != 1 && valoare != 0)
+        if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
         {
-            char errmsg[300];
-            sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 variabilei de tip bool \"%s\" ",nume);
-            yyerror(errmsg);
-            exit(0);
+            if(valoare != 1 && valoare != 0)
+            {
+                char errmsg[300];
+                sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 variabilei de tip bool \"%s\" ",nume);
+                yyerror(errmsg);
+                exit(0);
+            }
         }
+        symbol_table[decl].ivalue = valoare;
     }
-    symbol_table[decl].ivalue = valoare;
+    else
+    {
+        char id[100];
+        int poz = 0, j = 0;
+
+        for(int i = 0; i < strlen(apelfunctie); i++)
+        {
+            if(apelfunctie[i] == '[')
+            {
+                poz = i;
+                break;
+            }
+            id[j] = apelfunctie[i];
+            j++;
+        }
+        id[j] = '\0';
+
+        int valoare;
+        
+        for(int i = 0; i < count_f; i++)
+        {
+            if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,"null") == 0)
+            {
+                valoare = symbol_table_functions[i].valoareReturn;
+            }
+        }
+
+        if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
+        {
+            if(valoare != 1 && valoare != 0)
+            {
+                char errmsg[300];
+                sprintf(errmsg, "Nu se poate asigna o valoare diferita de 0 sau 1 variabilei de tip bool \"%s\" ",nume);
+                yyerror(errmsg);
+                exit(0);
+            }
+        }
+        symbol_table[decl].ivalue = valoare;
+    }
+    
 }
 
 void asignareVector(char* nume, int dimens, int valoare)
@@ -1008,7 +1048,7 @@ element : declarare
 
 argumente
     : '(' parametri ')'     { $$ = $2; }
-    | '(' ')'               { $$ = malloc(100); $$[0] = 0; }
+    | '(' ')'               { $$ = malloc(5); strcpy($$,"null"); }
     ;
 
 parametri
