@@ -41,6 +41,8 @@ Print("Valoarea expresiei vect[1] este", vect[1]);
 int result;
 result -> 10 * 10;
 
+float fl -> -1.4;
+
 Print("Valoarea expresiei result+1 este", result + 1);
 result -> {sum()};
 Print("Valoarea expresiei result este", result);
@@ -50,5 +52,8 @@ if(result == 30)::
     result++;
 }
 Print("Valoarea expresiei result este", result);
+
+vect[0]--;
+Print("Valoarea expresiei vect[0] este", vect[0]);
 
 end_program
