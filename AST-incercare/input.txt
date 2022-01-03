@@ -1,9 +1,19 @@
+start_functions::
+
+function int sum()::
+{
+    int nr1 -> 10;
+    int nr2 -> 20;
+    int res;
+    res -> nr1 + nr2;
+    return res;
+}
+
+end_functions
+
 start_program::
-int a;
-int b;
+int result;
 
-
-b -> 20;
-a -> 10 + b;
+result -> 2 * (7 + 10);
 
 end_program
