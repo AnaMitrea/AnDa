@@ -12,14 +12,21 @@ string arr;
 end_global
 start_functions::
 
-function int sum(int,int);
+function int sum(int,int)::
+{
+    int nr3 -> 10;
+    int nr4 -> -10;
+    int res2;
+    res2 -> nr3 * nr4;
+    return res2;
+}
 
 function int sum()::
 {
-    int nr1 -> 10;
+    int nr1 -> 30;
     int nr2 -> 20;
     int res;
-    res -> nr1 + nr2;
+    res -> nr1 * nr2;
     return res;
 }
 
@@ -32,28 +39,20 @@ newtype::
 end_functions
 
 start_program::
-int vect[2];
+int vect[3];
 vect[0] -> 10;
 vect[1] -> 2;
 
-Print("Valoarea expresiei vect[1] este", vect[1]);
-
 int result;
-result -> 10 * 10;
 
-float fl -> -1.4;
+result -> 10;
+Print("Valoarea lui result este", result);
+--result;
+Print("Valoarea lui result este", result);
 
-Print("Valoarea expresiei result+1 este", result + 1);
 result -> {sum()};
-Print("Valoarea expresiei result este", result);
-
-if(result == 30)::
-{
-    result++;
-}
-Print("Valoarea expresiei result este", result);
-
-vect[0]--;
-Print("Valoarea expresiei vect[0] este", vect[0]);
+Print("Valoarea lui result este", result);
+result -> {sum(1,1)};
+Print("Valoarea lui result este", result);
 
 end_program
