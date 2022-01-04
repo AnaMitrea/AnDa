@@ -262,8 +262,6 @@ void declarare_fara_initializare(char* tip, char* nume, int constanta)
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = 0;
     symbol_table[count].hasValue = 0;
-    symbol_table[count].ivalue = 999999;
-    symbol_table[count].flvalue = 999999;
     symbol_table[count].line_no = yylineno;
     switch(cod) {
     case 1:symbol_table[count].scope="global definition";
@@ -300,8 +298,6 @@ void declarare_vector(char* tip, char* nume, int dimens, int constanta)
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = 0;
     symbol_table[count].hasValue = 0;
-    symbol_table[count].ivalue = 999999;
-    symbol_table[count].flvalue = 999999;
     symbol_table[count].dimensiuneMax = dimens;
     symbol_table[count].vector = (int*)malloc(dimens * sizeof(int));
     symbol_table[count].hasVectorValue = (int*)malloc(dimens * sizeof(int));
@@ -376,7 +372,6 @@ void declarare_cu_init_floatnumar(char* tip, char* nume, float valoare, int cons
     symbol_table[count].data_type = strdup(tip);
     symbol_table[count].isConst = constanta;
     symbol_table[count].hasValue = 1;
-    symbol_table[count].ivalue = 999999;
     symbol_table[count].flvalue = valoare;
     symbol_table[count].line_no = yylineno;
     switch(cod) {
@@ -685,17 +680,17 @@ void asignareFunctie(char* nume, char* apelfunctie)
     }
     parametri[j] = '\0';
 
+    int valoare;
     if(strcmp(parametri,"fara_parametri") != 0)
     {
-        int valoare;
         for(int i = 0; i < count_f; i++)
         {
             if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,parametri) == 0)
             {
                 valoare = symbol_table_functions[i].valoareReturn;
+                break;
             }
         }
-
         if(strcmp(symbol_table[decl].data_type,"bool") == 0 )
         {
             if(valoare != 1 && valoare != 0)
@@ -706,7 +701,6 @@ void asignareFunctie(char* nume, char* apelfunctie)
                 exit(0);
             }
         }
-        symbol_table[decl].ivalue = valoare;
     }
     else
     {
@@ -724,14 +718,13 @@ void asignareFunctie(char* nume, char* apelfunctie)
             j++;
         }
         id[j] = '\0';
-
-        int valoare;
         
         for(int i = 0; i < count_f; i++)
         {
-            if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,"null") == 0)
+            if(strcmp(symbol_table_functions[i].name,id) == 0 && strcmp(symbol_table_functions[i].args,"fara_parametri") == 0)
             {
                 valoare = symbol_table_functions[i].valoareReturn;
+                break;
             }
         }
 
@@ -745,9 +738,9 @@ void asignareFunctie(char* nume, char* apelfunctie)
                 exit(0);
             }
         }
-        symbol_table[decl].ivalue = valoare;
     }
-    
+    symbol_table[decl].ivalue = valoare;
+    symbol_table[decl].hasValue = 1;
 }
 
 void asignareVector(char* nume, int dimens, int valoare)
@@ -853,8 +846,8 @@ void declarare_functie(char* tip, char* nume, char* argum)
 
     symbol_table_functions[count_f].name = nume;
     symbol_table_functions[count_f].return_type = tip;
-    symbol_table_functions[count_f].args = argum;
     symbol_table_functions[count_f].valoareReturn = 999999;
+    symbol_table_functions[count_f].args = argum;
     symbol_table_functions[count_f].line_no = yylineno;
     count_f++;
 }
@@ -897,7 +890,7 @@ void verificare_apel_functie(char* nume, char* listaparametri)
 
     for(int i = 0; i < count_f; i++)
     {
-        if(strcmp(symbol_table_functions[i].name,nume) == 0)
+        if(strcmp(symbol_table_functions[i].name,nume) == 0 && strcmp(symbol_table_functions[i].args,listaparametri) == 0)
         {
             ok = i;
         }
@@ -1048,7 +1041,7 @@ element : declarare
 
 argumente
     : '(' parametri ')'     { $$ = $2; }
-    | '(' ')'               { $$ = malloc(5); strcpy($$,"null"); }
+    | '(' ')'               { $$ = malloc(5); strcpy($$,"fara_parametri"); }
     ;
 
 parametri
@@ -1205,7 +1198,6 @@ expresie
                                             }
     ;
 
-
 %%
 
 int yyerror(char * s)
@@ -1244,7 +1236,7 @@ int main(int argc, char** argv)
     {
         if(strcmp(symbol_table[i].data_type,"float") == 0)
         {
-            fprintf(f1,"%s\t|\t%d\t|%s\t|%s\t|%f\t|%d\n", symbol_table[i].name, symbol_table[i].dimensiuneMax, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].flvalue, symbol_table[i].line_no);
+            fprintf(f1,"%s\t\t\t\t|\t\t%d\t\t|\t%s\t|\t%s\t\t|\t\t%f\t\t|\t\t%d\n", symbol_table[i].name, symbol_table[i].dimensiuneMax, symbol_table[i].data_type, symbol_table[i].scope, symbol_table[i].flvalue, symbol_table[i].line_no);
         }
         else 
         if(strcmp(symbol_table[i].data_type,"int") == 0 || strcmp(symbol_table[i].data_type,"bool") == 0 || strcmp(symbol_table[i].data_type,"char") == 0)
@@ -1254,9 +1246,9 @@ int main(int argc, char** argv)
             {
                 for(int k=0; k < symbol_table[i].dimensiuneMax; k++)
                 {
-                    fprintf(f1, "%s[%d]\t\t|\t\t\t val=%d\n", symbol_table[i].name, k, symbol_table[i].vector[k]);
+                    fprintf(f1, "%s[%d]\t\t|\t\t\t val = %d\n", symbol_table[i].name, k, symbol_table[i].vector[k]);
                 }
-                fprintf(f1, "................................................................................................\n");
+                fprintf(f1, "...................................................................................................................\n");
             }
         }
     }
