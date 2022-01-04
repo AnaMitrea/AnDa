@@ -1,0 +1,7 @@
+
+SYMBOL      RETURN_TYPE           PARAMETERS                      VAL_RETURN       LINENUMBER 
+______________________________________________________________________________________________________
+
+sum		    |	int		    |	int, int			                              |	-100			  |	22
+sum		    |	int		    |	fara_parametri		                          |	600			    |	31
+myType		|	newtype		|				                                      |	999999			|	37

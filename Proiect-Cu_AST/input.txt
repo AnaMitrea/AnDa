@@ -1,0 +1,58 @@
+start_global::
+
+bool var1 -> TRUE;
+bool var2 -> FALSE;
+bool var3 -> 1;
+char c;
+int poz -> 100;
+int neg -> -1002;
+const int abc -> 0;
+string arr;
+
+end_global
+start_functions::
+
+function int sum(int,int)::
+{
+    int nr3 -> 10;
+    int nr4 -> -10;
+    int res2;
+    res2 -> nr3 * nr4;
+    return res2;
+}
+
+function int sum()::
+{
+    int nr1 -> 30;
+    int nr2 -> 20;
+    int res;
+    res -> nr1 * nr2;
+    return res;
+}
+
+newtype::
+{
+    int a;
+    const int b -> 10;
+} myType;
+
+end_functions
+
+start_program::
+int vect[3];
+vect[0] -> 10;
+vect[1] -> 2;
+
+int result;
+
+result -> 10;
+Print("Valoarea lui result este", result);
+--result;
+Print("Valoarea lui result este", result);
+
+result -> {sum()};
+Print("Valoarea lui result este", result);
+result -> {sum(1,1)};
+Print("Valoarea lui result este", result);
+
+end_program
