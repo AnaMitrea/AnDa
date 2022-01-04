@@ -1169,7 +1169,7 @@ statements
     : ID UNARY                                  { incrementare_decrementare($1,$2); }                
     | UNARY ID                                  { incrementare_decrementare($2,$1); }  
     | ID ASSIGN expresie                        { int result = EvalAST($3); asignare($1,result); }
-    | ID ASSIGN conditie                        { asignare($1,$3); }
+    | ID ASSIGN '(' conditie ')'                { asignare($1,$4); }
     | ID ASSIGN '{' apelarefunctie '}'          { asignareFunctie($1,$4); }
     | ID dimensiuni ASSIGN expresie             { int result = EvalAST($4); asignareVector($1,$2,result); }
     | ID dimensiuni ASSIGN conditie             { asignareVector($1,$2,$4); }
