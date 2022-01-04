@@ -6,12 +6,12 @@ Schema Proiect: https://docs.google.com/document/d/11IkXxfoeaDLs4QW58GmxWlX8tZNe
 https://docs.google.com/document/d/132hBX6AaAB64Z5ZZitO4R11WILvZEFDJRf_Awusydso/edit?usp=sharing
 
 Compilare proiect cu mk.sh: 
-- bash mk.sh proiect
-- ./proiect program.txt
+- bash mk.sh parser
+- ./parser input.txt
 
 Compilare proiect cu makefile:
 - make all
-- ./proiect program.txt
+- ./parser input.txt
 
 
 
