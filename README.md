@@ -1,4 +1,7 @@
 # Descriere
+Ordinea operatorilor
+De pus functiile in expresii => nodetype e OTHER
+
 Enunt: https://docs.google.com/document/d/16kXgtGknKOjQpg1mojSh0s6H8XQmFQPM6Hf0_d9V0bY/edit#heading=h.gjdgxs
 
 Check List: https://docs.google.com/document/d/132hBX6AaAB64Z5ZZitO4R11WILvZEFDJRf_Awusydso/edit?usp=sharing
