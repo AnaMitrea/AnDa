@@ -1,0 +1,19 @@
+Resurse:
+
+1) Laboratoare LEX: https://profs.info.uaic.ro/~otto/LFAC_LabLex/
+2) Laboratoare YACC: https://profs.info.uaic.ro/~otto/LFAC_LabYacc/
+3) The Fundamentals of lex Rules: https://docs.oracle.com/cd/E19504-01/802-5880/lex-6/index.html
+4) Numere pozitive si negative: https://www.geeksforgeeks.org/lex-program-identify-count-positive-negative-numbers/
+5) https://stackoverflow.com/questions/45186052/how-to-write-yacc-grammar-rules-to-identify-function-definitions-vs-function-cal
+6) https://silcnitc.github.io/ywl.html
+
+Resurse video:
+1) Introducere 1 YACC https://www.youtube.com/watch?v=yTXCPGAD3SQ&ab_channel=WayneCochran
+2) Introducere 2 YACC https://www.youtube.com/watch?v=mGIme3D0NTA&ab_channel=WayneCochran
+3) Introducere 3 YACC https://www.youtube.com/watch?v=wEFvuOvllkM&ab_channel=WayneCochran
+
+4) Part 01: Tutorial on lex/yacc https://www.youtube.com/watch?v=54bo1qaHAfk&ab_channel=JonathanEngelsma
+5) Part 02: Tutorial on lex/yacc https://www.youtube.com/watch?v=__-wUHG2rfM&ab_channel=JonathanEngelsma
+Code Source: https://github.com/jengelsma/yacc-tutorial
+6) Parse Tree: http://web.eecs.utk.edu/~bvanderz/cs461/notes/parse_tree/ & https://silcnitc.github.io/ywl.html
+7) https://medium.com/codex/building-a-c-compiler-using-lex-and-yacc-446262056aaa
